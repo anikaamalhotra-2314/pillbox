@@ -35,9 +35,9 @@ Modified again: sizes and radius replaced with hers (my estimates were 22 / 18 /
 
 Modified again: added `numeral: 16`; time labels, weekday names and button text share `title: 17`; screen titles share `heading: 24`. The 4pt spacing scale and 6pt shadow offset were confirmed as fine.
 
-**Held back:** the month label. She said 27, but the export's ink width for "March 2025" (122px) matches 17pt (about 118px expected) and not 27pt (about 188px). Likely a typo for 17; no token added until she confirms.
+**Month label:** she first said 27. The AI flagged that the export's ink width for "March 2025" (122px) matched roughly 17pt, not 27pt (about 188px), and held the token back. She then corrected it: (said in session) "month label should be 15". Added as `label: 15`.
 
-Noted for her: date numbers are 16 while every other mid-size style is 17. If unintentional, unifying leaves a three-step scale of 12 / 17 / 24.
+Noted for her: the mid-size styles are now 15 (month), 16 (date numbers) and 17 (title, time labels, weekdays, button), all within 2pt of each other. If that spread is unintentional, unifying would tighten the scale to something like 12 / 16 / 24. Her call.
 
 ## Why
 TODO(anika)
