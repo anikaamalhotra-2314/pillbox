@@ -1,5 +1,5 @@
-// Sizes are the owner's Figma values. Other text styles in the design (time labels, weekday and
-// date numbers, month label, form labels, screen titles, buttons) are not defined yet.
+// Sizes are the owner's Figma values. Not yet defined: month label (awaiting confirmation) and
+// form labels / placeholder text.
 
 export const fontFamily = {
   // B612 Mono, per the Figma. Names follow @expo-google-fonts/b612-mono; verify them on install.
@@ -13,7 +13,8 @@ export const fontFamily = {
 } as const;
 
 export const fontSize = {
-  heading: 24, // greeting: "Good Morning, Anika."
-  title: 17, // pill card: medication name
+  heading: 24, // greeting; screen titles ("Add New Medication", medication name)
+  title: 17, // pill card name; time labels; weekday names; button text ("Save Changes!")
+  numeral: 16, // date numbers in the week strip
   subheading: 12, // pill card: "1 pill | 125mg"
 } as const;

@@ -29,7 +29,15 @@ Modified: all eight hex values replaced with hers; font family set to B612 Mono 
 
 (said in session) "font heading is 24, title of pill card is 17, subheading of pill card is 12, corner radius is 5"
 
-Modified again: sizes and radius replaced with hers (my estimates were 22 / 18 / 13 and radius 4). Renamed the size tokens to her vocabulary (`heading`, `title`, `subheading`) and dropped my `body: 16`, which nothing in the design maps to. The 4pt spacing scale beyond the 20pt gutter is still unreviewed.
+Modified again: sizes and radius replaced with hers (my estimates were 22 / 18 / 13 and radius 4). Renamed the size tokens to her vocabulary (`heading`, `title`, `subheading`) and dropped my `body: 16`, which nothing in the design maps to. 
+
+(said in session) "time label: 17, weekday names: 17, date numbers: 16, month label: 27, add new medication + microgestin: 24, save changes: 17. spacing scale and shadow offset is fine"
+
+Modified again: added `numeral: 16`; time labels, weekday names and button text share `title: 17`; screen titles share `heading: 24`. The 4pt spacing scale and 6pt shadow offset were confirmed as fine.
+
+**Held back:** the month label. She said 27, but the export's ink width for "March 2025" (122px) matches 17pt (about 118px expected) and not 27pt (about 188px). Likely a typo for 17; no token added until she confirms.
+
+Noted for her: date numbers are 16 while every other mid-size style is 17. If unintentional, unifying leaves a three-step scale of 12 / 17 / 24.
 
 ## Why
 TODO(anika)

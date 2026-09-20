@@ -2,7 +2,7 @@
 
 export const space = {
   gutter: 20, // measured: left/right margin of cards on the home screen
-  // Everything below is a conventional 4pt scale, NOT measured from the Figma.
+  // Everything below is a conventional 4pt scale, not measured from the Figma. Owner confirmed it is fine.
   1: 4,
   2: 8,
   3: 12,
@@ -26,5 +26,5 @@ export const radius = {
  * or as a component, not as a `shadow*` style.
  */
 export const stackedShadow = {
-  offset: 6, // measured 6.3 to 6.7pt; x and y equal
+  offset: 6, // measured 6.3 to 6.7pt; x and y equal. Owner confirmed.
 } as const;
