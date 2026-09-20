@@ -1,18 +1,18 @@
-// AI first pass, extracted from docs/design/figma/ (unreviewed by the owner).
-// Hex values are exact pixel samples from the exports. The names are proposals.
+// Hex values are the owner's exact Figma values (source of truth). The AI's first draft used
+// pixel samples from PNG exports, which were off by up to 6 levels per channel. Names are proposals.
 
 /** Primitives: the raw palette, named by what it is. Only `color` below should be used by components. */
 export const palette = {
-  cream: '#fcf8f6',
+  cream: '#fdf8f6',
   ink: '#000000',
-  peach: '#f2d3c7',
-  peachDeep: '#cca293',
-  periwinkle: '#dde2ef',
-  periwinkleDeep: '#a7b3d2',
-  yellow: '#fdee91',
-  yellowDeep: '#c3b76d',
+  peach: '#f8d3c6',
+  peachDeep: '#d5a292',
+  periwinkle: '#dde3f1',
+  periwinkleDeep: '#a6b4d6',
+  yellow: '#ffef84',
+  yellowDeep: '#c6b961',
   // Warm grays. Both are the accessibility fixes from decision 0009.
-  taupe: '#5f5656', // was #736b6b (3.66:1 on peach)
+  taupe: '#5f5656', // was #736b6b (3.74:1 on peach)
   taupeSoft: '#767070', // was #b3aeae (2.08:1 on cream)
 } as const;
 

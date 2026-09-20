@@ -10,11 +10,11 @@ evidence: docs/design/behavior-spec.md
 ---
 
 ## Context
-The AI flagged likely accessibility problems in the Figma exports and measured them. Colors were sampled from the PNG exports, so anti-aliasing can skew values slightly. Confirm against the Figma variables before shipping.
+The AI flagged likely accessibility problems in the Figma exports and measured them. Colors were sampled from the PNG exports, so anti-aliasing can skew values slightly. Re-checked later against the owner's exact Figma hex values (see 0012): conclusions unchanged, ratios shifted by under 0.1.
 
 | Element | Measured | Result |
 |---|---|---|
-| Taken card text `#736b6b` on peach `#f2d2c7` | 3.66:1 | Fails 4.5:1 for small text |
+| Taken card text `#736b6b` on peach `#f2d2c7` | 3.66:1 (3.74:1 on the exact Figma peach) | Fails 4.5:1 for small text |
 | Taken time label `#736b6b` on cream `#fcf8f6` | 4.92:1 | Passes |
 | Form placeholder `#b3aeae` on cream `#fcf8f6` | 2.08:1 | Fails 4.5:1 |
 | Selected day fill `#dde2ef` vs cream | 1.23:1 | Selected vs unselected differs by a barely visible fill |
@@ -22,8 +22,8 @@ The AI flagged likely accessibility problems in the Figma exports and measured t
 The day picker also uses M T W **R** F S **N**, which a screen reader reads as bare letters, and the checkboxes and day circles look smaller than the 44pt minimum touch target.
 
 ## AI's proposal
-- Taken card text `#5f5656` (5.02:1 on peach). Keep the dimmed look through the card surface and strike-through, not through low-contrast text.
-- Placeholder `#767070` (4.6:1 on cream).
+- Taken card text `#5f5656` (5.12:1 on peach). Keep the dimmed look through the card surface and strike-through, not through low-contrast text.
+- Placeholder `#767070` (4.61:1 on cream).
 - Day picker: keep the circles, change labels to Mo Tu We Th Fr Sa Su. Every circle gets a full-weekday accessibility label and a selected state. Make selection legible without relying on fill alone (bold label plus a heavier ring).
 - 44pt hit areas on checkboxes and day circles via hit slop, without changing the visual size.
 

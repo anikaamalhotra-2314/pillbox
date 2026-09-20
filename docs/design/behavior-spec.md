@@ -32,8 +32,8 @@ Grace window and late logging are decided. The visual treatments below are still
 
 ## Accessibility fixes ([0009](../decisions/0009-accessibility-fixes-to-figma.md)) — ACCEPTED
 
-- Taken card text `#5f5656` on peach `#f2d2c7`: 5.02:1 (was 3.66:1).
-- Form placeholder `#767070` on cream `#fcf8f6`: 4.6:1 (was 2.08:1).
+- Taken card text `#5f5656` on peach `#f8d3c6`: 5.12:1 (was 3.74:1).
+- Form placeholder `#767070` on cream `#fdf8f6`: 4.61:1 (was 2.08:1).
 - Day picker labels Mo Tu We Th Fr Sa Su (was M T W R F S N). Full weekday as accessibility label, with selected state. Selection also shown by bold label and heavier ring, not fill alone.
 - 44pt minimum hit areas on checkboxes and day circles (hit slop; visuals unchanged).
 - Visible focus ring on web. All motion respects reduce motion.

@@ -4,7 +4,7 @@ title: Draft design tokens (two-layer colors, type, layout) from the Figma expor
 date: 2026-09-20
 area: design-system
 origin: ai
-outcome: pending
+outcome: modified
 tool: claude-code
 evidence: src/design-system/tokens/, scripts/check-token-contrast.mjs
 ---
@@ -23,7 +23,9 @@ Every component depends on tokens, so they come first. The Figma is a set of PNG
 - Deliberately **not drafted**: motion tokens and the font family, which are hers to decide.
 
 ## My call
-TODO(anika)
+(said in session) Supplied the exact Figma values: "cream: FDF8F6 peach: F8D3C6/D5A292, periwinkle DDE3F1/A6B4D6, yellow FFEF84/C6B961 the font is b612 mono, but any native monospace font works."
+
+Modified: all eight hex values replaced with hers; font family set to B612 Mono (italic and bold as their own families) with a system monospace as an acceptable fallback. Estimated font sizes, radius and spacing not yet reviewed.
 
 ## Why
 TODO(anika)
@@ -32,3 +34,4 @@ TODO(anika)
 - Can't identify the typeface from a PNG. `Menlo` is a stand-in.
 - Font sizes rest on an assumed 393pt frame and 0.6em advance; one estimate (time labels) came out unreliable and was dropped instead of guessed.
 - Sampling initially landed on the Figma canvas background more than once; corrected by cross-checking regions.
+- **Every sampled color was off from the real Figma value**, by up to 6 levels in a channel (peach red `f2` vs `f8`). PNG exports don't carry the exact source color. The contrast conclusions in 0009 survived, but only re-checking showed that.
