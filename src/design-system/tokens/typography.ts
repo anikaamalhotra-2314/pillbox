@@ -1,5 +1,5 @@
-// Sizes are ESTIMATED from ink width in the PNG exports, assuming a monospace face with 0.6em
-// advance and a 393pt-wide frame. Expect +/- 1pt. Confirm in Figma.
+// Sizes are the owner's Figma values. Other text styles in the design (time labels, weekday and
+// date numbers, month label, form labels, screen titles, buttons) are not defined yet.
 
 export const fontFamily = {
   // B612 Mono, per the Figma. Names follow @expo-google-fonts/b612-mono; verify them on install.
@@ -13,8 +13,7 @@ export const fontFamily = {
 } as const;
 
 export const fontSize = {
-  caption: 13, // card subtitle: "1 pill | 125mg"
-  body: 16,
-  title: 18, // medication name on cards, month label, weekday labels
-  display: 22, // greeting: "Good Morning, Anika."
+  heading: 24, // greeting: "Good Morning, Anika."
+  title: 17, // pill card: medication name
+  subheading: 12, // pill card: "1 pill | 125mg"
 } as const;

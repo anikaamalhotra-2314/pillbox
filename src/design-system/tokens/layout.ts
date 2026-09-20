@@ -17,7 +17,7 @@ export const borderWidth = {
 } as const;
 
 export const radius = {
-  card: 4, // estimated by eye, not measured
+  card: 5, // owner's Figma value
 } as const;
 
 /**
