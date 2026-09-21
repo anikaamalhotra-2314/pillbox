@@ -4,7 +4,7 @@ title: Build StackedCard and Text primitives, load B612 Mono, add a dev gallery
 date: 2026-09-21
 area: design-system
 origin: ai
-outcome: pending
+outcome: accepted
 tool: claude-code
 evidence: commit "ai: add StackedCard, Text, font loading, and dev gallery"
 ---
@@ -25,7 +25,7 @@ Every screen uses the offset-shadow card (dose cards, cabinet cards, the Save bu
 Verified: typecheck passes; web export builds; screenshotted in headless Chrome and compared with the Figma (outlined shadow, flat pressed state, olive yellow shadow, italic and bold render). **Not verified:** iOS device or simulator, tap behaviour, the focus ring, VoiceOver.
 
 ## My call
-TODO(anika)
+(said in session) "looks good to me", after being asked to try the card and report how the pressed state feels. Accepted as proposed, including the 4pt press travel. Which platform she tried it on was not stated.
 
 ## Why
 TODO(anika)
