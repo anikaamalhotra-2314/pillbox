@@ -23,6 +23,7 @@ See `docs/decisions/README.md`. One file per decision, numbered `NNNN-slug.md`, 
 
 - `npm run ios` / `npm run web`: dev server. iOS needs a development build, not Expo Go (decision 0002).
 - `npm run typecheck`: `tsc --noEmit`.
+- `npm test`: Jest (jest-expo). Domain logic in `src/domain/` must stay covered.
 - `npm run check:contrast`: token contrast checker; must pass.
 - `npm run decisions`: AI/human decision stats.
 
