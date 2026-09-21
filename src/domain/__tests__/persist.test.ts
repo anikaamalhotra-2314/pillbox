@@ -70,3 +70,17 @@ describe('startDate', () => {
     expect(parsed?.dropped).toBe(2);
   });
 });
+
+describe('icon', () => {
+  it('keeps a valid icon and works without one', () => {
+    const withIcon = { ...med, icon: { shape: 'capsule', color: 'mint' } };
+    expect(parsePersistedState({ medications: [withIcon], logs: [] })?.state.medications[0].icon).toEqual({ shape: 'capsule', color: 'mint' });
+    expect(parsePersistedState({ medications: [med], logs: [] })?.state.medications[0]).not.toHaveProperty('icon');
+  });
+  it('ignores an unknown icon without dropping the medication', () => {
+    const parsed = parsePersistedState({ medications: [{ ...med, icon: { shape: 'star', color: 'mint' } }, { ...med, id: 'b', icon: 'capsule' }], logs: [] });
+    expect(parsed?.state.medications).toHaveLength(2);
+    expect(parsed?.state.medications[0]).not.toHaveProperty('icon');
+    expect(parsed?.dropped).toBe(0);
+  });
+});

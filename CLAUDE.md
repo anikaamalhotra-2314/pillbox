@@ -27,6 +27,8 @@ See `docs/decisions/README.md`. One file per decision, numbered `NNNN-slug.md`, 
 - `npm run check:contrast`: token contrast checker; must pass.
 - `npm run decisions`: AI/human decision stats.
 
+When starting a background server in a shell command, stop it by PID. `pkill -f <pattern>` also matches the shell running the command and kills it.
+
 Web export is a single-page app (decision 0022): any host must rewrite all paths to `index.html`. `expo serve` has no such fallback, so use `npm run web` locally, or a static server with the fallback, when testing deep links.
 
 Expo SDK 57 is newer than most model knowledge. Check the versioned docs (see AGENTS.md) before writing version-specific code, and say so when you're unsure.

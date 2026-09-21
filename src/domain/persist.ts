@@ -1,5 +1,6 @@
 import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
 import { MAX_GRACE_MINUTES } from './medication';
+import { isPillIcon } from './pill-icon';
 import type { DoseLog, Medication } from './types';
 
 // Stored data is untrusted input: an older app version, a bug, or hand-editing can leave anything there.
@@ -32,7 +33,7 @@ function isDate(v: unknown): v is LocalDate {
 
 function parseMedication(v: unknown): Medication | null {
   if (!isRecord(v)) return null;
-  const { id, name, dosage, notes, days, times, graceMinutes, alertsEnabled, startDate } = v;
+  const { id, name, dosage, notes, days, times, graceMinutes, alertsEnabled, startDate, icon } = v;
   if (!isText(id) || !isText(name) || !isText(dosage)) return null;
   if (notes !== undefined && typeof notes !== 'string') return null;
   if (!Array.isArray(days) || days.length === 0 || !days.every(isWeekday)) return null;
@@ -47,6 +48,8 @@ function parseMedication(v: unknown): Medication | null {
     graceMinutes: graceMinutes as number,
     alertsEnabled,
     ...(startDate ? { startDate } : {}),
+    // Cosmetic, so an unknown icon is ignored rather than costing the user the medication.
+    ...(isPillIcon(icon) ? { icon: { shape: icon.shape, color: icon.color } } : {}),
   };
 }
 

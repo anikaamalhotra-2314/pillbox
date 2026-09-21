@@ -8,6 +8,7 @@ import { TextField } from '@/design-system/primitives/TextField';
 import { space } from '@/design-system/tokens';
 import { emptyDraft, hasErrors, MAX_GRACE_MINUTES, validateDraft, type MedicationDraft } from '@/domain/medication';
 import { DayPicker } from './DayPicker';
+import { PillIconField } from './PillIconField';
 import { TimeList } from './TimeList';
 import { Pressable } from '@/design-system/primitives/Pressable';
 
@@ -54,6 +55,8 @@ export function MedicationForm({ initial, submitLabel, onSubmit, header, footnot
           ref={notesRef} label="Notes" placeholder="e.g. 1 pill, morning"
           value={draft.notes} onChangeText={(notes) => patch({ notes })} returnKeyType="done"
         />
+
+        <PillIconField value={draft.icon} onChange={(icon) => patch({ icon })} />
 
         <DayPicker value={draft.days} onChange={(days) => patch({ days })} error={errors.days} />
 

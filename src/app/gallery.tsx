@@ -3,7 +3,9 @@ import { ScrollView, View } from 'react-native';
 
 import { StackedCard } from '@/design-system/primitives/StackedCard';
 import { Text } from '@/design-system/primitives/Text';
+import { PillIcon } from '@/design-system/icons/PillIcon';
 import { fontSize, space } from '@/design-system/tokens';
+import { PILL_COLORS, PILL_SHAPES } from '@/domain/pill-icon';
 import { DoseCard } from '@/features/today/DoseCard';
 import type { DoseStatus } from '@/domain/types';
 
@@ -41,6 +43,16 @@ export default function Gallery() {
           <Text variant="title">Save Changes!</Text>
         </StackedCard>
       </Section>
+      <Section title="Pill icons: every shape and color">
+        {PILL_SHAPES.map((shape) => (
+          <View key={shape.id} style={{ flexDirection: 'row', gap: space[2] }}>
+            {PILL_COLORS.map((c) => (
+              <PillIcon key={c.id} icon={{ shape: shape.id, color: c.id }} size={48} />
+            ))}
+          </View>
+        ))}
+      </Section>
+
       <Section title="DoseCard: every state">
         {(['upcoming', 'due', 'overdue', 'missed', 'taken', 'skipped', 'locked'] as DoseStatus[]).map((status) => (
           <DoseCard

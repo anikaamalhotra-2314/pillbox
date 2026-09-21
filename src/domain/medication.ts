@@ -1,4 +1,5 @@
 import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
+import { DEFAULT_PILL_ICON, isPillIcon, pillIconOf, type PillIcon } from './pill-icon';
 import { DEFAULT_GRACE_MINUTES, type Medication } from './types';
 
 /** Alphabetical, ignoring case and accents; ties keep their original order. */
@@ -17,6 +18,7 @@ export interface MedicationDraft {
   times: LocalTime[];
   graceMinutes: string;
   alertsEnabled: boolean;
+  icon: PillIcon;
 }
 
 export function emptyDraft(): MedicationDraft {
@@ -28,6 +30,7 @@ export function emptyDraft(): MedicationDraft {
     times: [],
     graceMinutes: String(DEFAULT_GRACE_MINUTES),
     alertsEnabled: true,
+    icon: DEFAULT_PILL_ICON,
   };
 }
 
@@ -40,6 +43,7 @@ export function toDraft(m: Medication): MedicationDraft {
     times: [...m.times],
     graceMinutes: String(m.graceMinutes),
     alertsEnabled: m.alertsEnabled,
+    icon: pillIconOf(m),
   };
 }
 
@@ -81,6 +85,7 @@ export function toMedication(d: MedicationDraft, id: string, startDate?: LocalDa
     times: [...new Set(d.times)].sort(),
     graceMinutes: Number(d.graceMinutes),
     alertsEnabled: d.alertsEnabled,
+    icon: isPillIcon(d.icon) ? { shape: d.icon.shape, color: d.icon.color } : DEFAULT_PILL_ICON,
     ...(startDate ? { startDate } : {}),
   };
 }

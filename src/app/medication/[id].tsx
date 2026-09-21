@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { MedicationIcon } from '@/design-system/icons/MedicationIcon';
+import { PillIcon } from '@/design-system/icons/PillIcon';
 import { ActionMenu } from '@/design-system/primitives/ActionMenu';
 import { ConfirmModal } from '@/design-system/primitives/ConfirmModal';
 import { PlaceholderScreen } from '@/design-system/primitives/PlaceholderScreen';
@@ -13,6 +13,7 @@ import { borderWidth, color, space } from '@/design-system/tokens';
 import { toLocalDate } from '@/domain/dates';
 import { buildDay, doseKey } from '@/domain/day';
 import { medicationSubtitle } from '@/domain/format';
+import { pillIconOf } from '@/domain/pill-icon';
 import { toDraft, updatedMedication } from '@/domain/medication';
 import { MedicationInfo } from '@/features/medication-details/MedicationInfo';
 import { MedicationForm } from '@/features/medication-form/MedicationForm';
@@ -44,7 +45,7 @@ export default function MedicationDetails() {
 
   const hero = (
     <View style={{ alignItems: 'center', paddingVertical: space[5], borderBottomWidth: borderWidth.default, borderBottomColor: color.border.strong }}>
-      <MedicationIcon />
+      <PillIcon icon={pillIconOf(medication)} size={80} />
     </View>
   );
 

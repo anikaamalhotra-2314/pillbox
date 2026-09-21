@@ -1,4 +1,5 @@
 import type { LocalDate, LocalTime, Weekday } from './dates';
+import type { PillIcon } from './pill-icon';
 
 /** Default minutes after the scheduled time that a dose still counts as "due" (decision 0008). */
 export const DEFAULT_GRACE_MINUTES = 30;
@@ -15,6 +16,8 @@ export interface Medication {
   alertsEnabled: boolean;
   /** First day this medication counts. Doses never appear before it. Missing means it always did. */
   startDate?: LocalDate;
+  /** Missing on medications saved before icons existed; use `pillIconOf`. */
+  icon?: PillIcon;
 }
 
 /** One scheduled occurrence of a medication. Derived from the schedule, never stored. */

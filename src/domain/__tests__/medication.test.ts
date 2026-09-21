@@ -39,6 +39,7 @@ describe('toMedication', () => {
     const m = toMedication(valid({ name: ' Synthroid ', notes: '  ', days: ['sun', 'mon', 'wed'], times: ['19:00', '06:30', '19:00'], graceMinutes: '15' }), 'x1');
     expect(m).toEqual({
       id: 'x1', name: 'Synthroid', dosage: '125mg', days: ['mon', 'wed', 'sun'], times: ['06:30', '19:00'], graceMinutes: 15, alertsEnabled: true,
+      icon: { shape: 'scored', color: 'periwinkle' },
     });
     expect('notes' in m).toBe(false);
   });
@@ -85,5 +86,24 @@ describe('sortMedications', () => {
     const b = { ...named('zyrtec'), id: 'second' };
     expect(sortMedications([b, a]).map((m) => m.id)).toEqual(['second', 'first']);
     expect(sortMedications([named('Éclat'), named('Eagle'), named('Zinc')]).map((m) => m.name)).toEqual(['Eagle', 'Éclat', 'Zinc']);
+  });
+});
+
+describe('icon', () => {
+  it('new drafts start with the default icon', () => {
+    expect(emptyDraft().icon).toEqual({ shape: 'scored', color: 'periwinkle' });
+  });
+  it('the chosen icon is saved and restored when editing', () => {
+    const m = toMedication(valid({ icon: { shape: 'capsule', color: 'mint' } }), 'x');
+    expect(m.icon).toEqual({ shape: 'capsule', color: 'mint' });
+    expect(toDraft(m).icon).toEqual({ shape: 'capsule', color: 'mint' });
+  });
+  it('a medication saved without an icon edits with the default', () => {
+    const { icon: _omitted, ...old } = toMedication(valid(), 'x');
+    expect(toDraft(old).icon).toEqual({ shape: 'scored', color: 'periwinkle' });
+  });
+  it('an invalid icon in a draft falls back to the default instead of being saved', () => {
+    const m = toMedication(valid({ icon: { shape: 'star', color: 'red' } as never }), 'x');
+    expect(m.icon).toEqual({ shape: 'scored', color: 'periwinkle' });
   });
 });
