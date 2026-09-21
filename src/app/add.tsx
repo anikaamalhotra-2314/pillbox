@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { View } from 'react-native';
 
 import { ScreenHeader } from '@/design-system/primitives/ScreenHeader';
+import { toLocalDate } from '@/domain/dates';
 import { toMedication } from '@/domain/medication';
 import { MedicationForm } from '@/features/medication-form/MedicationForm';
 import { usePillbox } from '@/store/pillbox';
@@ -17,7 +18,7 @@ export default function AddMedication() {
       <MedicationForm
         submitLabel="Save Medication"
         onSubmit={(draft) => {
-          addMedication(toMedication(draft, newId()));
+          addMedication(toMedication(draft, newId(), toLocalDate(new Date())));
           leave();
         }}
       />

@@ -70,3 +70,19 @@ describe('buildDay (the Figma home screen, Saturday March 15 at 10:35)', () => {
     expect(buildDay(meds, [], '2025-03-15', new Date(2025, 2, 14, 9, 0)).every((e) => e.status === 'locked')).toBe(true);
   });
 });
+
+describe('startDate', () => {
+  it('does not create doses before the medication existed', () => {
+    const meds = [{ ...med('new', ['08:00'], ['fri', 'sat']), startDate: '2025-03-15' }];
+    expect(dosesForDate(meds, '2025-03-14')).toEqual([]);
+    expect(dosesForDate(meds, '2025-03-15')).toHaveLength(1);
+    expect(dosesForDate(meds, '2025-03-22')).toHaveLength(1);
+  });
+  it('a past day shows nothing for a newly added medication, not a wall of "missed"', () => {
+    const meds = [{ ...med('new', ['08:00'], ['fri', 'sat']), startDate: '2025-03-15' }];
+    expect(buildDay(meds, [], '2025-03-14', now)).toEqual([]);
+  });
+  it('a medication without a start date always existed', () => {
+    expect(dosesForDate([med('old', ['08:00'], ['fri'])], '2019-01-04')).toHaveLength(1);
+  });
+});

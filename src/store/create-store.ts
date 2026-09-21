@@ -5,7 +5,7 @@ import { toLocalDate } from '@/domain/dates';
 import { toggleTaken } from '@/domain/logs';
 import { parsePersistedState, type PersistedState } from '@/domain/persist';
 import type { Dose, Medication } from '@/domain/types';
-import { seedMedications } from './seed';
+import { createSeedMedications } from './seed';
 import { createSafeStorage, type RawStorage } from './storage';
 
 export const STORAGE_KEY = 'pillbox';
@@ -16,23 +16,37 @@ export const STORAGE_VERSION = 1;
 export interface PillboxState extends PersistedState {
   toggleTaken: (dose: Dose, now: Date) => void;
   addMedication: (medication: Medication) => void;
+  updateMedication: (medication: Medication) => void;
+  /** Removes the medication and its dose history. */
+  deleteMedication: (id: string) => void;
   /** Back to the sample data. For development and tests. */
   reset: () => void;
 }
 
 // First launch starts with the sample data from the Figma, until there is a real empty state.
-const initial = (): PersistedState => ({ userName: 'Anika', medications: seedMedications, logs: [] });
+const initial = (now: () => number): PersistedState => ({
+  userName: 'Anika',
+  medications: createSeedMedications(toLocalDate(new Date(now()))),
+  logs: [],
+});
 
 /** A store that saves to `raw`. Separate from the default instance so tests can pass an in-memory `raw`. */
 export function createPillboxStore(raw: RawStorage, now: () => number = Date.now) {
   return create<PillboxState>()(
     persist<PillboxState, [], [], PersistedState>(
       (set) => ({
-        ...initial(),
+        ...initial(now),
         addMedication: (medication) => set((state) => ({ medications: [...state.medications, medication] })),
+        updateMedication: (medication) =>
+          set((state) => ({ medications: state.medications.map((m) => (m.id === medication.id ? medication : m)) })),
+        deleteMedication: (id) =>
+          set((state) => ({
+            medications: state.medications.filter((m) => m.id !== id),
+            logs: state.logs.filter((l) => l.medicationId !== id),
+          })),
         toggleTaken: (dose, at) =>
           set((state) => (dose.date > toLocalDate(at) ? state : { logs: toggleTaken(state.logs, dose, at) })),
-        reset: () => set(initial()),
+        reset: () => set(initial(now)),
       }),
       {
         name: STORAGE_KEY,

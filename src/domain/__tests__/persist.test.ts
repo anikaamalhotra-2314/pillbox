@@ -58,3 +58,15 @@ describe('parsePersistedState', () => {
     expect(parsed?.dropped).toBe(1);
   });
 });
+
+describe('startDate', () => {
+  it('is kept when valid and optional when absent', () => {
+    expect(parsePersistedState({ medications: [{ ...med, startDate: '2025-03-15' }], logs: [] })?.state.medications[0].startDate).toBe('2025-03-15');
+    expect(parsePersistedState({ medications: [med], logs: [] })?.state.medications[0]).not.toHaveProperty('startDate');
+  });
+  it('drops a medication whose start date is invalid', () => {
+    const parsed = parsePersistedState({ medications: [{ ...med, startDate: '2025-02-30' }, { ...med, id: 'b', startDate: 5 }], logs: [] });
+    expect(parsed?.state.medications).toEqual([]);
+    expect(parsed?.dropped).toBe(2);
+  });
+});

@@ -1,4 +1,4 @@
-import { emptyDraft, hasErrors, toDraft, toMedication, validateDraft, withTime, type MedicationDraft } from '../medication';
+import { emptyDraft, hasErrors, toDraft, toMedication, updatedMedication, validateDraft, withTime, type MedicationDraft } from '../medication';
 
 const valid = (over: Partial<MedicationDraft> = {}): MedicationDraft => ({
   ...emptyDraft(), name: 'Synthroid', dosage: '125mg', times: ['06:30'], ...over,
@@ -58,5 +58,17 @@ describe('withTime', () => {
   });
   it('replaces a time when editing', () => {
     expect(withTime(['06:30', '19:00'], '07:00', '06:30')).toEqual(['07:00', '19:00']);
+  });
+});
+
+describe('startDate and editing', () => {
+  it('records the start date when given', () => {
+    expect(toMedication(valid(), 'x', '2025-03-15').startDate).toBe('2025-03-15');
+    expect('startDate' in toMedication(valid(), 'x')).toBe(false);
+  });
+  it('an edit keeps the id and start date and applies the new fields', () => {
+    const existing = toMedication(valid(), 'keep-me', '2025-03-15');
+    const edited = updatedMedication(existing, valid({ dosage: '100mcg', times: ['07:00', '19:00'], graceMinutes: '10' }));
+    expect(edited).toMatchObject({ id: 'keep-me', startDate: '2025-03-15', dosage: '100mcg', times: ['07:00', '19:00'], graceMinutes: 10 });
   });
 });

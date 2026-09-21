@@ -1,5 +1,6 @@
 import { createPillboxStore, STORAGE_KEY } from '../create-store';
-import { seedMedications } from '../seed';
+import { createSeedMedications } from '../seed';
+import { toLocalDate } from '@/domain/dates';
 import type { RawStorage } from '../storage';
 import type { Dose, Medication } from '@/domain/types';
 
@@ -14,6 +15,7 @@ function memoryStorage(initial: Record<string, string> = {}) {
 }
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const NOW = 1_700_000_000_000;
+const seedMedications = createSeedMedications(toLocalDate(new Date()));
 
 const med: Medication = { id: 'levo', name: 'Levothyroxine', dosage: '50mcg', days: ['mon'], times: ['08:00'], graceMinutes: 15, alertsEnabled: false };
 const dose: Dose = { medicationId: 'synthroid', date: '2025-03-15', time: '06:30' };
@@ -75,7 +77,8 @@ describe('persistence', () => {
     const store = createPillboxStore(raw, () => NOW);
     await store.persist.rehydrate();
     expect(store.persist.hasHydrated()).toBe(true);
-    expect(store.getState().medications).toEqual(seedMedications);
+    // The store was given a fixed clock, so the sample data starts on that day.
+    expect(store.getState().medications).toEqual(createSeedMedications(toLocalDate(new Date(NOW))));
     expect(data.get(`${STORAGE_KEY}:corrupt:${NOW}`)).toBe('{"state": {oops');
   });
 
@@ -132,5 +135,45 @@ describe('persistence', () => {
     const again = createPillboxStore(raw);
     await again.persist.rehydrate();
     expect(again.getState().medications).toEqual(seedMedications);
+  });
+});
+
+describe('editing and deleting', () => {
+  const mk = async () => {
+    const { raw } = memoryStorage();
+    const store = createPillboxStore(raw);
+    await store.persist.rehydrate();
+    return { store, raw };
+  };
+
+  it('updates a medication in place, keeping its position, and saves it', async () => {
+    const { store, raw } = await mk();
+    const original = store.getState().medications[1];
+    store.getState().updateMedication({ ...original, dosage: '250mg', times: ['09:00'] });
+    await flush();
+    expect(store.getState().medications.map((m) => m.id)).toEqual(['synthroid', 'microgestin', 'calcium']);
+    const again = createPillboxStore(raw);
+    await again.persist.rehydrate();
+    expect(again.getState().medications[1]).toMatchObject({ id: 'microgestin', dosage: '250mg', times: ['09:00'] });
+  });
+
+  it('deleting removes the medication and its history, and nothing else', async () => {
+    const { store, raw } = await mk();
+    store.getState().toggleTaken({ medicationId: 'synthroid', date: '2025-03-15', time: '06:30' }, at);
+    store.getState().toggleTaken({ medicationId: 'calcium', date: '2025-03-15', time: '13:00' }, at);
+    store.getState().deleteMedication('synthroid');
+    await flush();
+    expect(store.getState().medications.map((m) => m.id)).toEqual(['microgestin', 'calcium']);
+    expect(store.getState().logs.map((l) => l.medicationId)).toEqual(['calcium']);
+    const again = createPillboxStore(raw);
+    await again.persist.rehydrate();
+    expect(again.getState().medications).toHaveLength(2);
+    expect(again.getState().logs).toHaveLength(1);
+  });
+
+  it('deleting an unknown id changes nothing', async () => {
+    const { store } = await mk();
+    store.getState().deleteMedication('nope');
+    expect(store.getState().medications).toHaveLength(3);
   });
 });

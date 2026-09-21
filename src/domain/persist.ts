@@ -32,19 +32,21 @@ function isDate(v: unknown): v is LocalDate {
 
 function parseMedication(v: unknown): Medication | null {
   if (!isRecord(v)) return null;
-  const { id, name, dosage, notes, days, times, graceMinutes, alertsEnabled } = v;
+  const { id, name, dosage, notes, days, times, graceMinutes, alertsEnabled, startDate } = v;
   if (!isText(id) || !isText(name) || !isText(dosage)) return null;
   if (notes !== undefined && typeof notes !== 'string') return null;
   if (!Array.isArray(days) || days.length === 0 || !days.every(isWeekday)) return null;
   if (!Array.isArray(times) || times.length === 0 || !times.every(isTime)) return null;
   if (!Number.isInteger(graceMinutes) || (graceMinutes as number) < 1 || (graceMinutes as number) > MAX_GRACE_MINUTES) return null;
   if (typeof alertsEnabled !== 'boolean') return null;
+  if (startDate !== undefined && !isDate(startDate)) return null;
   return {
     id, name, dosage, ...(notes ? { notes } : {}),
     days: WEEKDAYS.filter((w) => days.includes(w)),
     times: [...new Set(times)].sort(),
     graceMinutes: graceMinutes as number,
     alertsEnabled,
+    ...(startDate ? { startDate } : {}),
   };
 }
 

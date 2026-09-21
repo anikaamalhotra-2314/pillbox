@@ -1,4 +1,4 @@
-import { formatTime, greetingFor, localTimeOf, monthYearLabel, spokenDate, spokenTime, statusLabel, statusPhrase, weekdayShort } from '../format';
+import { formatDays, formatTime, greetingFor, localTimeOf, monthYearLabel, spokenDate, spokenTime, statusLabel, statusPhrase, weekdayShort } from '../format';
 
 describe('formatTime / spokenTime', () => {
   it.each([
@@ -53,5 +53,15 @@ describe('date labels', () => {
     expect(greetingFor(new Date(2025, 2, 15, 11, 59))).toBe('Morning');
     expect(greetingFor(new Date(2025, 2, 15, 12, 0))).toBe('Afternoon');
     expect(greetingFor(new Date(2025, 2, 15, 17, 0))).toBe('Evening');
+  });
+});
+
+describe('formatDays', () => {
+  it('summarizes common patterns and lists the rest in week order', () => {
+    expect(formatDays(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).toBe('Every day');
+    expect(formatDays(['fri', 'mon', 'thu', 'tue', 'wed'])).toBe('Weekdays');
+    expect(formatDays(['sun', 'sat'])).toBe('Weekends');
+    expect(formatDays(['wed', 'mon', 'fri'])).toBe('Mon, Wed, Fri');
+    expect(formatDays(['sun'])).toBe('Sun');
   });
 });

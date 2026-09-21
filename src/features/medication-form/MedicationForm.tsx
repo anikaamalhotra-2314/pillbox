@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 
 import { Checkbox } from '@/design-system/primitives/Checkbox';
@@ -15,10 +15,14 @@ type Props = {
   initial?: MedicationDraft;
   submitLabel: string;
   onSubmit: (draft: MedicationDraft) => void;
+  /** Shown above the fields, inside the same scrolling area. */
+  header?: ReactNode;
+  /** A short note shown above the save button. */
+  footnote?: string;
 };
 
 /** Shared by Add and Edit. Errors appear only after the first attempt to save, then update as you fix them. */
-export function MedicationForm({ initial, submitLabel, onSubmit }: Props) {
+export function MedicationForm({ initial, submitLabel, onSubmit, header, footnote }: Props) {
   const [draft, setDraft] = useState<MedicationDraft>(initial ?? emptyDraft());
   const [submitted, setSubmitted] = useState(false);
   const dosageRef = useRef<TextInput>(null);
@@ -35,6 +39,7 @@ export function MedicationForm({ initial, submitLabel, onSubmit }: Props) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space[5], gap: space[5] }}>
+        {header}
         <TextField
           label="Medication Title" required placeholder="e.g. Amoxicillin"
           value={draft.name} onChangeText={(name) => patch({ name })} error={errors.name}
@@ -72,6 +77,7 @@ export function MedicationForm({ initial, submitLabel, onSubmit }: Props) {
         <TimeList times={draft.times} onChange={(times) => patch({ times })} error={errors.times} />
 
         <View style={{ gap: space[3], alignItems: 'flex-start' }}>
+          {footnote && <Text variant="subheading" tone="placeholder">{footnote}</Text>}
           {submitted && hasErrors(errors) && <Text variant="subheading" role="alert">Please fix the highlighted fields.</Text>}
           <StackedCard
             tone="yellow" onPress={submit} accessibilityLabel={submitLabel}

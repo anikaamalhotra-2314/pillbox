@@ -1,4 +1,4 @@
-import { WEEKDAYS, type LocalTime, type Weekday } from './dates';
+import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
 import { DEFAULT_GRACE_MINUTES, type Medication } from './types';
 
 export const MAX_GRACE_MINUTES = 180;
@@ -65,7 +65,7 @@ export function validateDraft(d: MedicationDraft): DraftErrors {
 }
 
 /** Assumes the draft is valid. Trims text, drops empty notes, and orders days and times. */
-export function toMedication(d: MedicationDraft, id: string): Medication {
+export function toMedication(d: MedicationDraft, id: string, startDate?: LocalDate): Medication {
   const notes = d.notes.trim();
   return {
     id,
@@ -76,7 +76,13 @@ export function toMedication(d: MedicationDraft, id: string): Medication {
     times: [...new Set(d.times)].sort(),
     graceMinutes: Number(d.graceMinutes),
     alertsEnabled: d.alertsEnabled,
+    ...(startDate ? { startDate } : {}),
   };
+}
+
+/** Applies an edited draft to an existing medication, keeping its id and start date. */
+export function updatedMedication(existing: Medication, d: MedicationDraft): Medication {
+  return toMedication(d, existing.id, existing.startDate);
 }
 
 /** Adds a time (or swaps `replacing` for it), keeping the list sorted and free of duplicates. */

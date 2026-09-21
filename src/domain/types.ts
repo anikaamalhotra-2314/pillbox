@@ -13,6 +13,8 @@ export interface Medication {
   /** Per medication: some medications need stricter timing (decision 0008). */
   graceMinutes: number;
   alertsEnabled: boolean;
+  /** First day this medication counts. Doses never appear before it. Missing means it always did. */
+  startDate?: LocalDate;
 }
 
 /** One scheduled occurrence of a medication. Derived from the schedule, never stored. */

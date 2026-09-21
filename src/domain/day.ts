@@ -10,7 +10,7 @@ export function doseKey(d: Pick<Dose, 'medicationId' | 'date' | 'time'>): string
 export function dosesForDate(medications: Medication[], date: LocalDate): Dose[] {
   const weekday = weekdayOf(date);
   return medications
-    .filter((m) => m.days.includes(weekday))
+    .filter((m) => m.days.includes(weekday) && (!m.startDate || date >= m.startDate))
     .flatMap((m) => [...new Set(m.times)].map((time) => ({ medicationId: m.id, date, time })));
 }
 

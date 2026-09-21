@@ -20,7 +20,8 @@ type Props = {
   alertsEnabled: boolean;
   /** ISO timestamp of when the dose was logged. Shown as "Taken 6:42am". */
   loggedAt?: string;
-  onOpen: () => void;
+  /** Without it, the card is plain information (for example on the details screen itself). */
+  onOpen?: () => void;
   onToggleTaken: () => void;
   /** When given, shows the "..." button that opens the dose actions (skip, snooze, edit). */
   onOpenMenu?: () => void;
@@ -41,12 +42,20 @@ export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt
   const tag = statusLabel(status, loggedAt);
   const taken = status === 'taken';
   const spoken = spokenTime(time);
+  const label = `${name}, ${subtitle}, ${spoken}, ${statusPhrase(status, loggedAt)}`;
+  const text = (
+    <>
+      <Text variant="title" tone={tone} style={taken ? { textDecorationLine: 'line-through' } : undefined}>{name}</Text>
+      <Text variant="subheading" tone={tone}>{subtitle}</Text>
+    </>
+  );
+  const textBox = { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: space[3] } as const;
 
   return (
     <View testID={testID} style={{ gap: space[2] }}>
-      {/* Its content is already part of the card's accessibility label. */}
+      {/* When the card is a button, its label already includes this row. */}
       <View
-        aria-hidden
+        aria-hidden={Boolean(onOpen)}
         style={{ flexDirection: 'row', alignItems: 'center', gap: space[2] }}
       >
         {alertsEnabled && <BellIcon />}
@@ -55,18 +64,21 @@ export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt
       </View>
 
       <StackedCard pressed={down} dimmed={dimmed} contentStyle={{ flexDirection: 'row', minHeight: 66 }}>
-        <Pressable
-          onPress={onOpen}
-          onPressIn={() => setDown(true)}
-          onPressOut={() => setDown(false)}
-          accessibilityRole="button"
-          accessibilityLabel={`${name}, ${subtitle}, ${spoken}, ${statusPhrase(status, loggedAt)}`}
-          accessibilityHint="Opens medication details"
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: space[3] }}
-        >
-          <Text variant="title" tone={tone} style={taken ? { textDecorationLine: 'line-through' } : undefined}>{name}</Text>
-          <Text variant="subheading" tone={tone}>{subtitle}</Text>
-        </Pressable>
+        {onOpen ? (
+          <Pressable
+            onPress={onOpen}
+            onPressIn={() => setDown(true)}
+            onPressOut={() => setDown(false)}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityHint="Opens medication details"
+            style={textBox}
+          >
+            {text}
+          </Pressable>
+        ) : (
+          <View style={textBox}>{text}</View>
+        )}
 
         <View style={{ width: 56, alignItems: 'center', justifyContent: 'center' }}>
           <Checkbox

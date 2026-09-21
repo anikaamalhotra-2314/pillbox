@@ -1,4 +1,4 @@
-import { dayOfMonth, monthIndexOf, weekdayOf, yearOf, type LocalDate, type LocalTime, type Weekday } from './dates';
+import { dayOfMonth, monthIndexOf, WEEKDAYS, weekdayOf, yearOf, type LocalDate, type LocalTime, type Weekday } from './dates';
 import type { DoseStatus } from './types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -77,6 +77,16 @@ export function weekdayShort(date: LocalDate): string {
 export function spokenDate(date: LocalDate, isToday: boolean): string {
   const base = `${WEEKDAY_NAMES[weekdayOf(date)]}, ${MONTHS[monthIndexOf(date)]} ${dayOfMonth(date)}`;
   return isToday ? `${base}, today` : base;
+}
+
+/** 'Every day', 'Weekdays', 'Weekends', or the short names in week order. */
+export function formatDays(days: Weekday[]): string {
+  const on = WEEKDAYS.filter((w) => days.includes(w));
+  const same = (list: Weekday[]) => on.length === list.length && list.every((w) => on.includes(w));
+  if (on.length === 7) return 'Every day';
+  if (same(['mon', 'tue', 'wed', 'thu', 'fri'])) return 'Weekdays';
+  if (same(['sat', 'sun'])) return 'Weekends';
+  return on.map((w) => WEEKDAY_NAMES[w].slice(0, 3)).join(', ');
 }
 
 export function greetingFor(now: Date): 'Morning' | 'Afternoon' | 'Evening' {
