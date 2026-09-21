@@ -21,6 +21,8 @@ type Props = {
   /** Force the pressed look (galleries, tests). */
   pressed?: boolean;
   disabled?: boolean;
+  /** Softer outline for resolved or locked cards. */
+  dimmed?: boolean;
   accessibilityLabel?: string;
   accessibilityHint?: string;
   accessibilityState?: AccessibilityState;
@@ -42,6 +44,7 @@ export function StackedCard({
   onPress,
   pressed: pressedProp,
   disabled,
+  dimmed,
   accessibilityLabel,
   accessibilityHint,
   accessibilityState,
@@ -55,7 +58,7 @@ export function StackedCard({
   const isPressed = pressedProp ?? (down && !disabled);
   const { offset, pressTravel } = stackedShadow;
 
-  const layer = { borderWidth: borderWidth.default, borderColor: color.border.strong, borderRadius: radius.card } as const;
+  const layer = { borderWidth: borderWidth.default, borderColor: dimmed ? color.border.dimmed : color.border.strong, borderRadius: radius.card } as const;
 
   const body = (
     <>
@@ -100,7 +103,8 @@ export function StackedCard({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled, ...accessibilityState }}
+      aria-disabled={disabled}
+      accessibilityState={accessibilityState}
       style={[
         box,
         focused && { outlineWidth: 2, outlineStyle: 'solid', outlineColor: color.border.strong, outlineOffset: 2 },

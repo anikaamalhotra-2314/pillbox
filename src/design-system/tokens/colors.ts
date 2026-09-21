@@ -14,6 +14,9 @@ export const palette = {
   // Warm grays. Both are the accessibility fixes from decision 0009.
   taupe: '#5f5656', // was #736b6b (3.74:1 on peach)
   taupeSoft: '#767070', // was #b3aeae (2.08:1 on cream)
+  // The Figma's taken-card gray (border, shadow outline, checkbox). Sampled from the export, so it may
+  // be a few levels off. Fine for borders (about 4.9:1 on cream); too light for small text.
+  ash: '#736b6b',
 } as const;
 
 /** Semantic tokens: named by what they do. Components use these and never a hex value. */
@@ -38,6 +41,7 @@ export const color = {
   },
   border: {
     strong: palette.ink,
+    dimmed: palette.ash, // taken, skipped and locked cards
   },
   overlay: {
     // Sampled #b1b1b0 over cream works out to black at about 30%.
