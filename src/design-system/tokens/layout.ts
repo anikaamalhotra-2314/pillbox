@@ -27,4 +27,7 @@ export const radius = {
  */
 export const stackedShadow = {
   offset: 6, // measured 6.3 to 6.7pt; x and y equal. Owner confirmed.
+  // Pressed cards keep their size, lose the shadow, and sit down-right of their resting spot.
+  // Measured from ONE Figma frame at about 4 to 5pt. Less than `offset`. A starting point: tune by feel.
+  pressTravel: 4,
 } as const;

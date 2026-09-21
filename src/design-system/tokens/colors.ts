@@ -22,7 +22,8 @@ export const color = {
     page: palette.cream,
     card: palette.peach,
     cardShadow: palette.peachDeep,
-    // Observed in the Figma: pressed = the fill becomes the shadow color and the shadow layer goes away.
+    // Observed in the Figma: pressed = the fill becomes the shadow color, the shadow layer goes away,
+    // and the card shifts down-right (see `stackedShadow.pressTravel`).
     cardPressed: palette.peachDeep,
     cabinetCard: palette.periwinkle,
     cabinetCardShadow: palette.periwinkleDeep,

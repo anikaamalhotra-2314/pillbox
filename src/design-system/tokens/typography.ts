@@ -8,6 +8,7 @@ export const fontFamily = {
   regular: 'B612Mono_400Regular',
   italic: 'B612Mono_400Regular_Italic',
   bold: 'B612Mono_700Bold',
+  boldItalic: 'B612Mono_700Bold_Italic',
   // Any system monospace is acceptable while the font loads or if it fails to.
   fallback: 'Menlo',
 } as const;
