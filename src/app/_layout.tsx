@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 
 import { color, fontFamily } from '@/design-system/tokens';
 
@@ -23,5 +24,12 @@ export default function RootLayout() {
 
   if (!loaded && !error) return null;
 
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.surface.page } }} />;
+  // On wide screens (web) the app stays a phone-width column, as designed.
+  return (
+    <View style={{ flex: 1, backgroundColor: color.surface.page }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.surface.page } }} />
+      </View>
+    </View>
+  );
 }

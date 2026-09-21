@@ -1,4 +1,4 @@
-import { formatTime, localTimeOf, spokenTime, statusLabel, statusPhrase } from '../format';
+import { formatTime, greetingFor, localTimeOf, monthYearLabel, spokenDate, spokenTime, statusLabel, statusPhrase, weekdayShort } from '../format';
 
 describe('formatTime / spokenTime', () => {
   it.each([
@@ -35,5 +35,23 @@ describe('statusLabel / statusPhrase', () => {
     expect(statusPhrase('taken', loggedAt)).toBe('taken at 6:42 AM');
     expect(statusPhrase('locked')).toBe('scheduled, cannot be marked yet');
     expect(statusPhrase('due')).toBe('due now');
+  });
+});
+
+describe('date labels', () => {
+  it('labels the month and the weekday like the Figma', () => {
+    expect(monthYearLabel('2025-03-15')).toBe('March 2025');
+    expect(weekdayShort('2025-03-12')).toBe('Wed');
+    expect(weekdayShort('2025-03-15')).toBe('Sat');
+  });
+  it('speaks a full date and marks today', () => {
+    expect(spokenDate('2025-03-15', false)).toBe('Saturday, March 15');
+    expect(spokenDate('2025-03-15', true)).toBe('Saturday, March 15, today');
+  });
+  it('greets by time of day', () => {
+    expect(greetingFor(new Date(2025, 2, 15, 6, 0))).toBe('Morning');
+    expect(greetingFor(new Date(2025, 2, 15, 11, 59))).toBe('Morning');
+    expect(greetingFor(new Date(2025, 2, 15, 12, 0))).toBe('Afternoon');
+    expect(greetingFor(new Date(2025, 2, 15, 17, 0))).toBe('Evening');
   });
 });
