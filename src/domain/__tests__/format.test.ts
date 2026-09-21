@@ -1,4 +1,4 @@
-import { formatDays, formatTime, greetingFor, localTimeOf, monthYearLabel, spokenDate, spokenTime, statusLabel, statusPhrase, weekdayShort } from '../format';
+import { cabinetTitle, formatDays, formatTime, greetingFor, medicationSubtitle, localTimeOf, monthYearLabel, spokenDate, spokenTime, statusLabel, statusPhrase, weekdayShort } from '../format';
 
 describe('formatTime / spokenTime', () => {
   it.each([
@@ -63,5 +63,16 @@ describe('formatDays', () => {
     expect(formatDays(['sun', 'sat'])).toBe('Weekends');
     expect(formatDays(['wed', 'mon', 'fri'])).toBe('Mon, Wed, Fri');
     expect(formatDays(['sun'])).toBe('Sun');
+  });
+});
+
+describe('medicationSubtitle / cabinetTitle', () => {
+  it('joins notes and dosage, or shows the dosage alone', () => {
+    expect(medicationSubtitle({ notes: '1 pill', dosage: '125mg' })).toBe('1 pill | 125mg');
+    expect(medicationSubtitle({ dosage: '50mcg' })).toBe('50mcg');
+    expect(medicationSubtitle({ notes: '', dosage: '50mcg' })).toBe('50mcg');
+  });
+  it('possessive title', () => {
+    expect(cabinetTitle('Anika')).toBe('Anika’s Medicine Cabinet');
   });
 });

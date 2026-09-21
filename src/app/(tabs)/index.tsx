@@ -7,11 +7,12 @@ import { Text } from '@/design-system/primitives/Text';
 import { borderWidth, color, space } from '@/design-system/tokens';
 import { toLocalDate } from '@/domain/dates';
 import { buildDay, doseKey } from '@/domain/day';
-import { greetingFor, monthYearLabel } from '@/domain/format';
+import { greetingFor, medicationSubtitle, monthYearLabel } from '@/domain/format';
 import { DoseCard } from '@/features/today/DoseCard';
 import { WeekStrip } from '@/features/today/WeekStrip';
 import { useNow } from '@/hooks/use-now';
 import { usePillbox } from '@/store/pillbox';
+import { FocusedScene } from '@/design-system/primitives/FocusedScene';
 import { Pressable } from '@/design-system/primitives/Pressable';
 
 const rule = { borderBottomWidth: borderWidth.default, borderBottomColor: color.border.strong } as const;
@@ -30,7 +31,7 @@ export default function Today() {
   const entries = useMemo(() => buildDay(medications, logs, selected, now), [medications, logs, selected, now]);
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top }}>
+    <FocusedScene style={{ flex: 1, paddingTop: insets.top }}>
       <View style={[rule, { padding: space[5] }]}>
         <Text variant="heading">
           {`Good ${greetingFor(now)}, `}
@@ -65,7 +66,7 @@ export default function Today() {
         renderItem={({ item: e }) => (
           <DoseCard
             name={e.medication.name}
-            subtitle={e.medication.notes ? `${e.medication.notes} | ${e.medication.dosage}` : e.medication.dosage}
+            subtitle={medicationSubtitle(e.medication)}
             time={e.dose.time}
             status={e.status}
             alertsEnabled={e.medication.alertsEnabled}
@@ -75,6 +76,6 @@ export default function Today() {
           />
         )}
       />
-    </View>
+    </FocusedScene>
   );
 }

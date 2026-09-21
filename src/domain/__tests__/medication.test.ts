@@ -1,4 +1,4 @@
-import { emptyDraft, hasErrors, toDraft, toMedication, updatedMedication, validateDraft, withTime, type MedicationDraft } from '../medication';
+import { emptyDraft, hasErrors, sortMedications, toDraft, toMedication, updatedMedication, validateDraft, withTime, type MedicationDraft } from '../medication';
 
 const valid = (over: Partial<MedicationDraft> = {}): MedicationDraft => ({
   ...emptyDraft(), name: 'Synthroid', dosage: '125mg', times: ['06:30'], ...over,
@@ -70,5 +70,20 @@ describe('startDate and editing', () => {
     const existing = toMedication(valid(), 'keep-me', '2025-03-15');
     const edited = updatedMedication(existing, valid({ dosage: '100mcg', times: ['07:00', '19:00'], graceMinutes: '10' }));
     expect(edited).toMatchObject({ id: 'keep-me', startDate: '2025-03-15', dosage: '100mcg', times: ['07:00', '19:00'], graceMinutes: 10 });
+  });
+});
+
+describe('sortMedications', () => {
+  const named = (name: string) => toMedication(valid({ name }), name);
+  it('sorts alphabetically, ignoring case, without changing the input', () => {
+    const input = [named('synthroid'), named('Calcium'), named('Microgestin')];
+    expect(sortMedications(input).map((m) => m.name)).toEqual(['Calcium', 'Microgestin', 'synthroid']);
+    expect(input.map((m) => m.name)).toEqual(['synthroid', 'Calcium', 'Microgestin']);
+  });
+  it('handles accents and keeps ties in their original order', () => {
+    const a = { ...named('Zyrtec'), id: 'first' };
+    const b = { ...named('zyrtec'), id: 'second' };
+    expect(sortMedications([b, a]).map((m) => m.id)).toEqual(['second', 'first']);
+    expect(sortMedications([named('Éclat'), named('Eagle'), named('Zinc')]).map((m) => m.name)).toEqual(['Eagle', 'Éclat', 'Zinc']);
   });
 });

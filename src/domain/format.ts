@@ -1,5 +1,5 @@
 import { dayOfMonth, monthIndexOf, WEEKDAYS, weekdayOf, yearOf, type LocalDate, type LocalTime, type Weekday } from './dates';
-import type { DoseStatus } from './types';
+import type { DoseStatus, Medication } from './types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -77,6 +77,16 @@ export function weekdayShort(date: LocalDate): string {
 export function spokenDate(date: LocalDate, isToday: boolean): string {
   const base = `${WEEKDAY_NAMES[weekdayOf(date)]}, ${MONTHS[monthIndexOf(date)]} ${dayOfMonth(date)}`;
   return isToday ? `${base}, today` : base;
+}
+
+/** The line under a medication's name: "1 pill | 125mg", or just the dosage when there are no notes. */
+export function medicationSubtitle(m: Pick<Medication, 'notes' | 'dosage'>): string {
+  return m.notes ? `${m.notes} | ${m.dosage}` : m.dosage;
+}
+
+/** "Anika's Medicine Cabinet", with a typographic apostrophe. */
+export function cabinetTitle(userName: string): string {
+  return `${userName}’s Medicine Cabinet`;
 }
 
 /** 'Every day', 'Weekdays', 'Weekends', or the short names in week order. */

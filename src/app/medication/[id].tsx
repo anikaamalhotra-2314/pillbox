@@ -12,6 +12,7 @@ import { Text } from '@/design-system/primitives/Text';
 import { borderWidth, color, space } from '@/design-system/tokens';
 import { toLocalDate } from '@/domain/dates';
 import { buildDay, doseKey } from '@/domain/day';
+import { medicationSubtitle } from '@/domain/format';
 import { toDraft, updatedMedication } from '@/domain/medication';
 import { MedicationInfo } from '@/features/medication-details/MedicationInfo';
 import { MedicationForm } from '@/features/medication-form/MedicationForm';
@@ -106,7 +107,7 @@ export default function MedicationDetails() {
                 <DoseCard
                   key={doseKey(e.dose)}
                   name={e.medication.name}
-                  subtitle={e.medication.notes ? `${e.medication.notes} | ${e.medication.dosage}` : e.medication.dosage}
+                  subtitle={medicationSubtitle(e.medication)}
                   time={e.dose.time}
                   status={e.status}
                   alertsEnabled={e.medication.alertsEnabled}

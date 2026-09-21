@@ -1,6 +1,11 @@
 import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
 import { DEFAULT_GRACE_MINUTES, type Medication } from './types';
 
+/** Alphabetical, ignoring case and accents; ties keep their original order. */
+export function sortMedications(medications: Medication[]): Medication[] {
+  return [...medications].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+}
+
 export const MAX_GRACE_MINUTES = 180;
 
 /** The add/edit form's state. Fields are text as typed; `toMedication` turns them into the real thing. */
