@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, Platform, View, type LayoutChangeEvent } from 'react-native';
 
 import { Text } from '@/design-system/primitives/Text';
 import { borderWidth, color, space } from '@/design-system/tokens';
 import { addDays, dayOfMonth, type LocalDate } from '@/domain/dates';
 import { spokenDate, weekdayShort } from '@/domain/format';
+import { Pressable } from '@/design-system/primitives/Pressable';
 
 const DAYS_EACH_SIDE = 60;
 const VISIBLE = 7;
@@ -23,10 +24,50 @@ export function WeekStrip({ today, selected, onSelect }: Props) {
   );
   const itemWidth = width / VISIBLE;
 
+  // Roving tabindex: only the selected day is a Tab stop, and the arrow keys move between days, so a
+  // keyboard user is not made to Tab through every date to reach the doses.
+  const listRef = useRef<FlatList<LocalDate>>(null);
+  const cells = useRef(new Map<LocalDate, View | null>());
+  const [focusTarget, setFocusTarget] = useState<LocalDate | null>(null);
+
+  const move = (delta: number) => {
+    const next = addDays(selected, delta);
+    const index = days.indexOf(next);
+    if (index < 0) return;
+    onSelect(next);
+    listRef.current?.scrollToIndex({ index, viewPosition: 0.5, animated: false });
+    setFocusTarget(next);
+  };
+
+  // `onKeyDown` is supported by React Native Web but is not in React Native's View typings.
+  const webKeyProps = Platform.OS === 'web'
+    ? {
+        onKeyDown: (e: { nativeEvent: { key: string }; preventDefault: () => void }) => {
+          const key = e.nativeEvent.key;
+          if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+          e.preventDefault();
+          move(key === 'ArrowRight' ? 1 : -1);
+        },
+      }
+    : {};
+
+  useEffect(() => {
+    if (!focusTarget) return;
+    const id = requestAnimationFrame(() => {
+      cells.current.get(focusTarget)?.focus();
+      setFocusTarget(null);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [focusTarget, selected]);
+
   return (
-    <View onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
+    <View
+      onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
+      {...webKeyProps}
+    >
       {width > 0 && (
         <FlatList
+          ref={listRef}
           horizontal
           data={days}
           extraData={`${selected}|${today}`}
@@ -37,7 +78,11 @@ export function WeekStrip({ today, selected, onSelect }: Props) {
           decelerationRate="fast"
           showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => (
-            <DayCell date={item} width={itemWidth} isToday={item === today} isSelected={item === selected} onPress={() => onSelect(item)} />
+            <DayCell
+              date={item} width={itemWidth} isToday={item === today} isSelected={item === selected}
+              onPress={() => onSelect(item)}
+              cellRef={(el) => { cells.current.set(item, el); }}
+            />
           )}
         />
       )}
@@ -48,11 +93,13 @@ export function WeekStrip({ today, selected, onSelect }: Props) {
 const MARKER = 32;
 const MARKER_OFFSET = 3;
 
-function DayCell({ date, width, isToday, isSelected, onPress }: {
-  date: LocalDate; width: number; isToday: boolean; isSelected: boolean; onPress: () => void;
+function DayCell({ date, width, isToday, isSelected, onPress, cellRef }: {
+  date: LocalDate; width: number; isToday: boolean; isSelected: boolean; onPress: () => void; cellRef: (el: View | null) => void;
 }) {
   return (
     <Pressable
+      ref={cellRef}
+      tabIndex={isSelected ? 0 : -1}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={spokenDate(date, isToday)}

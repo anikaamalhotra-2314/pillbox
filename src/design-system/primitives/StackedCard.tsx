@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, View, type AccessibilityState, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type AccessibilityState, type StyleProp, type ViewStyle } from 'react-native';
 
 import { borderWidth, color, radius, stackedShadow } from '@/design-system/tokens';
+import { Pressable } from '@/design-system/primitives/Pressable';
 
 export type StackedCardTone = 'peach' | 'periwinkle' | 'yellow';
 
@@ -53,7 +54,6 @@ export function StackedCard({
   testID,
 }: Props) {
   const [down, setDown] = useState(false);
-  const [focused, setFocused] = useState(false);
   const t = tones[tone];
   const isPressed = pressedProp ?? (down && !disabled);
   const { offset, pressTravel } = stackedShadow;
@@ -97,19 +97,13 @@ export function StackedCard({
       onPress={onPress}
       onPressIn={() => setDown(true)}
       onPressOut={() => setDown(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       aria-disabled={disabled}
       accessibilityState={accessibilityState}
-      style={[
-        box,
-        focused && { outlineWidth: 2, outlineStyle: 'solid', outlineColor: color.border.strong, outlineOffset: 2 },
-        style,
-      ]}
+      style={[box, style]}
     >
       {body}
     </Pressable>

@@ -58,6 +58,10 @@ const WEEKDAY_NAMES: Record<Weekday, string> = {
   mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday',
 };
 
+export function weekdayName(weekday: Weekday): string {
+  return WEEKDAY_NAMES[weekday];
+}
+
 /** '2025-03-15' becomes 'March 2025'. */
 export function monthYearLabel(date: LocalDate): string {
   return `${MONTHS[monthIndexOf(date)]} ${yearOf(date)}`;

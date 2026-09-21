@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/design-system/primitives/Text';
@@ -12,6 +12,7 @@ import { DoseCard } from '@/features/today/DoseCard';
 import { WeekStrip } from '@/features/today/WeekStrip';
 import { useNow } from '@/hooks/use-now';
 import { usePillbox } from '@/store/pillbox';
+import { Pressable } from '@/design-system/primitives/Pressable';
 
 const rule = { borderBottomWidth: borderWidth.default, borderBottomColor: color.border.strong } as const;
 

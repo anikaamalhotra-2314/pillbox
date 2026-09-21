@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Text } from '@/design-system/primitives/Text';
 import { space } from '@/design-system/tokens';
+import { Pressable } from '@/design-system/primitives/Pressable';
 
 /** Stand-in for screens that are designed but not built yet. Delete as each is implemented. */
 export function PlaceholderScreen({ title, note, back }: { title: string; note: string; back?: boolean }) {

@@ -1,7 +1,8 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Text } from '@/design-system/primitives/Text';
 import { borderWidth, color } from '@/design-system/tokens';
+import { Pressable } from '@/design-system/primitives/Pressable';
 
 type Props = {
   checked: boolean;
@@ -11,14 +12,33 @@ type Props = {
   disabled?: boolean;
   onPress?: () => void;
   accessibilityLabel: string;
+  /** Draw only the box, for use inside a row that is itself the checkbox. */
+  decorative?: boolean;
 };
 
 const SIZE = 24;
 
 /** 24pt box with a 44pt touch target (hit slop), so the visual matches the design. */
-export function Checkbox({ checked, glyph = 'check', dimmed, disabled, onPress, accessibilityLabel }: Props) {
+export function Checkbox({ checked, glyph = 'check', dimmed, disabled, onPress, accessibilityLabel, decorative }: Props) {
   const ink = dimmed ? color.border.dimmed : color.border.strong;
   const filled = checked || glyph === 'dash';
+  const box = (
+    <View
+      style={{
+        width: SIZE,
+        height: SIZE,
+        borderWidth: borderWidth.default,
+        borderColor: ink,
+        borderRadius: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {filled && glyph === 'check' && <Text variant="numeral" style={{ color: ink }}>✓</Text>}
+      {filled && glyph === 'dash' && <View style={{ width: 12, height: 2, backgroundColor: ink }} />}
+    </View>
+  );
+  if (decorative) return box;
   return (
     <Pressable
       onPress={onPress}
@@ -29,20 +49,7 @@ export function Checkbox({ checked, glyph = 'check', dimmed, disabled, onPress, 
       aria-checked={checked}
       aria-disabled={disabled}
     >
-      <View
-        style={{
-          width: SIZE,
-          height: SIZE,
-          borderWidth: borderWidth.default,
-          borderColor: ink,
-          borderRadius: 2,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {filled && glyph === 'check' && <Text variant="numeral" style={{ color: ink }}>✓</Text>}
-        {filled && glyph === 'dash' && <View style={{ width: 12, height: 2, backgroundColor: ink }} />}
-      </View>
+      {box}
     </Pressable>
   );
 }

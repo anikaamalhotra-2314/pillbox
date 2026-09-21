@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { BellIcon } from '@/design-system/icons/BellIcon';
 import { Checkbox } from '@/design-system/primitives/Checkbox';
@@ -9,6 +9,7 @@ import { space } from '@/design-system/tokens';
 import type { LocalTime } from '@/domain/dates';
 import { formatTime, spokenTime, statusLabel, statusPhrase } from '@/domain/format';
 import type { DoseStatus } from '@/domain/types';
+import { Pressable } from '@/design-system/primitives/Pressable';
 
 type Props = {
   name: string;
