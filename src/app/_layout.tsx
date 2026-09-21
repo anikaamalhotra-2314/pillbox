@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { color, fontFamily } from '@/design-system/tokens';
+import { useHydrated } from '@/store/use-hydrated';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,12 +18,15 @@ export default function RootLayout() {
     [fontFamily.boldItalic]: B612Mono_700Bold_Italic,
   });
 
+  const hydrated = useHydrated();
   // On a font error, fall through to system fonts rather than trapping the user on the splash.
-  useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
+  const ready = (loaded || error) && hydrated;
 
-  if (!loaded && !error) return null;
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) return null;
 
   // On wide screens (web) the app stays a phone-width column, as designed.
   return (

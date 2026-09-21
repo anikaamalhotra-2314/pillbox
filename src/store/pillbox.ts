@@ -1,24 +1,9 @@
-import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { toLocalDate } from '@/domain/dates';
-import { toggleTaken } from '@/domain/logs';
-import type { Dose, DoseLog, Medication } from '@/domain/types';
-import { seedMedications } from './seed';
+import { createPillboxStore } from './create-store';
 
-interface PillboxState {
-  userName: string;
-  medications: Medication[];
-  logs: DoseLog[];
-  toggleTaken: (dose: Dose, now: Date) => void;
-  addMedication: (medication: Medication) => void;
-}
+export { STORAGE_KEY } from './create-store';
+export type { PillboxState } from './create-store';
 
-// In memory only for now. Persistence comes next; the shape is what will be persisted.
-export const usePillbox = create<PillboxState>()((set) => ({
-  userName: 'Anika',
-  medications: seedMedications,
-  logs: [],
-  addMedication: (medication) => set((state) => ({ medications: [...state.medications, medication] })),
-  toggleTaken: (dose, now) =>
-    set((state) => (dose.date > toLocalDate(now) ? state : { logs: toggleTaken(state.logs, dose, now) })),
-}));
+// AsyncStorage is localStorage on web and native storage on iOS.
+export const usePillbox = createPillboxStore(AsyncStorage);
