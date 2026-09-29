@@ -1,4 +1,4 @@
-import { canLog, doseStatus, isResolved, logDose } from '../status';
+import { canLog, doseActions, doseStatus, isResolved, logDose } from '../status';
 import type { Dose, DoseLog } from '../types';
 
 const at = (h: number, m: number, day = 15) => new Date(2025, 2, day, h, m);
@@ -53,5 +53,17 @@ describe('logDose', () => {
   });
   it('refuses a future day', () => {
     expect(() => logDose({ ...dose, date: '2025-03-16' }, 'taken', at(9, 0))).toThrow();
+  });
+});
+
+describe('doseActions', () => {
+  it('offers skip and edit for a dose that can be logged', () => {
+    for (const s of ['upcoming', 'due', 'overdue', 'missed', 'taken'] as const) expect(doseActions(s)).toEqual(['skip', 'edit']);
+  });
+  it('offers to undo a skip', () => {
+    expect(doseActions('skipped')).toEqual(['unskip', 'edit']);
+  });
+  it('offers only edit on a future day', () => {
+    expect(doseActions('locked')).toEqual(['edit']);
   });
 });

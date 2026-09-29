@@ -46,4 +46,6 @@ Grace window and late logging are decided. The visual treatments below are still
 ## The "..." element ([0011](../decisions/0011-make-card-ellipsis-functional-or-remove.md)) — ACCEPTED
 
 - Dose card: overflow menu with Skip this dose, Snooze, Edit medication. Dots stay visually small; 44pt tap area.
+  - Built in [0025](../decisions/0025-dose-card-menu.md). Options depend on state: Skip / Undo skip, and Edit; a future dose offers only Edit.
+  - **Snooze** (decided in session): re-sends the reminder 10 minutes later. It does not move the dose: its time, status and due/overdue window stay the same.
 - Details screen: Pause or Delete medication (destructive, confirm first). The delete/pause flows need design.

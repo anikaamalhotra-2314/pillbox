@@ -177,3 +177,17 @@ describe('editing and deleting', () => {
     expect(store.getState().medications).toHaveLength(3);
   });
 });
+
+describe('skipping', () => {
+  it('saves a skipped dose, and ignores a skip on a future day', async () => {
+    const { raw } = memoryStorage();
+    const first = createPillboxStore(raw);
+    await first.persist.rehydrate();
+    first.getState().toggleSkipped(dose, at);
+    first.getState().toggleSkipped({ ...dose, date: '2025-03-16' }, at);
+    await flush();
+    const second = createPillboxStore(raw);
+    await second.persist.rehydrate();
+    expect(second.getState().logs).toEqual([{ ...dose, outcome: 'skipped', loggedAt: at.toISOString() }]);
+  });
+});

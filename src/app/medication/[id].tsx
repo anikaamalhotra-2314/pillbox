@@ -24,13 +24,16 @@ import { usePillbox } from '@/store/pillbox';
 const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 export default function MedicationDetails() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `edit=1` opens straight into the form (from a dose card's menu); leaving the form then leaves the screen.
+  const { id, edit } = useLocalSearchParams<{ id: string; edit?: string }>();
+  const openedToEdit = edit === '1';
   const medication = usePillbox((s) => s.medications.find((m) => m.id === id));
   const logs = usePillbox((s) => s.logs);
   const { toggleTaken, updateMedication, deleteMedication } = usePillbox.getState();
   const now = useNow();
 
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(openedToEdit);
+  const stopEditing = () => (openedToEdit ? leave() : setEditing(false));
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -52,7 +55,7 @@ export default function MedicationDetails() {
   if (editing) {
     return (
       <View style={{ flex: 1 }}>
-        <ScreenHeader title="Edit Medication" onBack={() => setEditing(false)} />
+        <ScreenHeader title="Edit Medication" onBack={stopEditing} />
         <MedicationForm
           initial={toDraft(medication)}
           submitLabel="Save Changes!"
@@ -60,7 +63,7 @@ export default function MedicationDetails() {
           header={hero}
           onSubmit={(draft) => {
             updateMedication(updatedMedication(medication, draft));
-            setEditing(false);
+            stopEditing();
           }}
         />
       </View>

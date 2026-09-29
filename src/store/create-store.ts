@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { toLocalDate } from '@/domain/dates';
-import { toggleTaken } from '@/domain/logs';
+import { toggleSkipped, toggleTaken } from '@/domain/logs';
 import { parsePersistedState, type PersistedState } from '@/domain/persist';
 import type { Dose, Medication } from '@/domain/types';
 import { createSeedMedications } from './seed';
@@ -15,6 +15,7 @@ export const STORAGE_VERSION = 1;
 
 export interface PillboxState extends PersistedState {
   toggleTaken: (dose: Dose, now: Date) => void;
+  toggleSkipped: (dose: Dose, now: Date) => void;
   addMedication: (medication: Medication) => void;
   updateMedication: (medication: Medication) => void;
   /** Removes the medication and its dose history. */
@@ -46,6 +47,8 @@ export function createPillboxStore(raw: RawStorage, now: () => number = Date.now
           })),
         toggleTaken: (dose, at) =>
           set((state) => (dose.date > toLocalDate(at) ? state : { logs: toggleTaken(state.logs, dose, at) })),
+        toggleSkipped: (dose, at) =>
+          set((state) => (dose.date > toLocalDate(at) ? state : { logs: toggleSkipped(state.logs, dose, at) })),
         reset: () => set(initial(now)),
       }),
       {

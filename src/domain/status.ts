@@ -34,3 +34,11 @@ export function logDose(dose: Dose, outcome: DoseOutcome, now: Date): DoseLog {
   if (dose.date > toLocalDate(now)) throw new Error('Cannot log a dose scheduled for a future day');
   return { ...dose, outcome, loggedAt: now.toISOString() };
 }
+
+export type DoseAction = 'skip' | 'unskip' | 'edit';
+
+/** What the dose card's "..." menu offers (decision 0011). A future dose can only be edited. */
+export function doseActions(status: DoseStatus): DoseAction[] {
+  if (!canLog(status)) return ['edit'];
+  return [status === 'skipped' ? 'unskip' : 'skip', 'edit'];
+}

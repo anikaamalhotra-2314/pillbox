@@ -1,4 +1,4 @@
-import { toggleTaken } from '../logs';
+import { toggleSkipped, toggleTaken } from '../logs';
 import type { Dose, DoseLog } from '../types';
 
 const dose: Dose = { medicationId: 'synthroid', date: '2025-03-15', time: '06:30' };
@@ -26,5 +26,22 @@ describe('toggleTaken', () => {
   });
   it('refuses a future dose', () => {
     expect(() => toggleTaken([], { ...dose, date: '2025-03-16' }, now)).toThrow();
+  });
+});
+
+describe('toggleSkipped', () => {
+  it('marks an unlogged dose skipped, recording when', () => {
+    expect(toggleSkipped([], dose, now)).toEqual([{ ...dose, outcome: 'skipped', loggedAt: now.toISOString() }]);
+  });
+  it('undoes a skip when toggled again', () => {
+    expect(toggleSkipped(toggleSkipped([], dose, now), dose, now)).toEqual([]);
+  });
+  it('turns a taken dose into a skipped one', () => {
+    const taken: DoseLog = { ...dose, outcome: 'taken', loggedAt: now.toISOString() };
+    const later = new Date(2025, 2, 15, 9, 0);
+    expect(toggleSkipped([taken], dose, later)).toEqual([{ ...dose, outcome: 'skipped', loggedAt: later.toISOString() }]);
+  });
+  it('refuses a future dose', () => {
+    expect(() => toggleSkipped([], { ...dose, date: '2025-03-16' }, now)).toThrow();
   });
 });
