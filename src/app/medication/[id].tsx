@@ -14,6 +14,7 @@ import { toLocalDate } from '@/domain/dates';
 import { buildDay, doseKey } from '@/domain/day';
 import { medicationSubtitle } from '@/domain/format';
 import { pillIconOf } from '@/domain/pill-icon';
+import { snoozedUntil } from '@/domain/reminders';
 import { toDraft, updatedMedication } from '@/domain/medication';
 import { MedicationInfo } from '@/features/medication-details/MedicationInfo';
 import { MedicationForm } from '@/features/medication-form/MedicationForm';
@@ -29,6 +30,7 @@ export default function MedicationDetails() {
   const openedToEdit = edit === '1';
   const medication = usePillbox((s) => s.medications.find((m) => m.id === id));
   const logs = usePillbox((s) => s.logs);
+  const snoozes = usePillbox((s) => s.snoozes);
   const { toggleTaken, updateMedication, deleteMedication } = usePillbox.getState();
   const now = useNow();
 
@@ -116,6 +118,7 @@ export default function MedicationDetails() {
                   status={e.status}
                   alertsEnabled={e.medication.alertsEnabled}
                   loggedAt={e.log?.loggedAt}
+                  snoozedUntil={snoozedUntil(snoozes, e.dose, now)}
                   onToggleTaken={() => toggleTaken(e.dose, now)}
                 />
               ))

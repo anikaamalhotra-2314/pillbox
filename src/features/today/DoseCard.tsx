@@ -7,7 +7,7 @@ import { StackedCard } from '@/design-system/primitives/StackedCard';
 import { Text } from '@/design-system/primitives/Text';
 import { space } from '@/design-system/tokens';
 import type { LocalTime } from '@/domain/dates';
-import { formatTime, spokenTime, statusLabel, statusPhrase } from '@/domain/format';
+import { formatTime, localTimeOf, spokenTime, statusLabel, statusPhrase } from '@/domain/format';
 import type { DoseStatus } from '@/domain/types';
 import { Pressable } from '@/design-system/primitives/Pressable';
 
@@ -20,6 +20,8 @@ type Props = {
   alertsEnabled: boolean;
   /** ISO timestamp of when the dose was logged. Shown as "Taken 6:42am". */
   loggedAt?: string;
+  /** ISO timestamp the reminder was snoozed to. Shown beside the status as "snoozed 10:55am". */
+  snoozedUntil?: string;
   /** Without it, the card is plain information (for example on the details screen itself). */
   onOpen?: () => void;
   onToggleTaken: () => void;
@@ -35,14 +37,16 @@ const EMPHASIZED: DoseStatus[] = ['due', 'overdue', 'missed'];
  * One scheduled dose on the home screen: time label above, stacked card below.
  * Three separate touch targets (open, check, menu) so none is nested inside another button.
  */
-export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt, onOpen, onToggleTaken, onOpenMenu, testID }: Props) {
+export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt, snoozedUntil, onOpen, onToggleTaken, onOpenMenu, testID }: Props) {
   const [down, setDown] = useState(false);
   const dimmed = DIMMED.includes(status);
   const tone = dimmed ? 'taken' : 'primary';
+  const snoozedTo = snoozedUntil && localTimeOf(snoozedUntil);
   const tag = statusLabel(status, loggedAt);
   const taken = status === 'taken';
   const spoken = spokenTime(time);
-  const label = `${name}, ${subtitle}, ${spoken}, ${statusPhrase(status, loggedAt)}`;
+  const snoozePhrase = snoozedTo ? `, reminder snoozed until ${spokenTime(snoozedTo)}` : '';
+  const label = `${name}, ${subtitle}, ${spoken}, ${statusPhrase(status, loggedAt)}${snoozePhrase}`;
   const text = (
     <>
       <Text variant="title" tone={tone} style={taken ? { textDecorationLine: 'line-through' } : undefined}>{name}</Text>
@@ -56,11 +60,13 @@ export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt
       {/* When the card is a button, its label already includes this row. */}
       <View
         aria-hidden={Boolean(onOpen)}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: space[2] }}
+        style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space[2] }}
       >
         {alertsEnabled && <BellIcon />}
         <Text variant="title" accent bold={EMPHASIZED.includes(status)} tone={tone}>{formatTime(time)}</Text>
         {tag && <Text variant="label" accent tone={tone}>{tag}</Text>}
+        {/* Its own piece, so on a narrow screen it moves to the next line whole instead of breaking mid-phrase. */}
+        {snoozedTo && <Text variant="label" accent tone={tone}>{`snoozed ${formatTime(snoozedTo)}`}</Text>}
       </View>
 
       <StackedCard pressed={down} dimmed={dimmed} contentStyle={{ flexDirection: 'row', minHeight: 66 }}>

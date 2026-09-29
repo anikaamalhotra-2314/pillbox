@@ -27,7 +27,7 @@ See `docs/decisions/README.md`. One file per decision, numbered `NNNN-slug.md`, 
 - `npm run check:contrast`: token contrast checker; must pass.
 - `npm run decisions`: AI/human decision stats.
 
-When starting a background server in a shell command, stop it by PID. `pkill -f <pattern>` also matches the shell running the command and kills it.
+With `CI=1` (useful for non-interactive runs), `expo start` does not reload on file changes: restart it after edits, or you will test a stale bundle. When starting a background server in a shell command, stop it by PID. `pkill -f <pattern>` also matches the shell running the command and kills it.
 
 Web export is a single-page app (decision 0022): any host must rewrite all paths to `index.html`. `expo serve` has no such fallback, so use `npm run web` locally, or a static server with the fallback, when testing deep links.
 

@@ -1,7 +1,7 @@
 import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
 import { MAX_GRACE_MINUTES } from './medication';
 import { isPillIcon } from './pill-icon';
-import type { DoseLog, Medication } from './types';
+import type { DoseLog, Medication, Snooze } from './types';
 
 // Stored data is untrusted input: an older app version, a bug, or hand-editing can leave anything there.
 // These functions keep what is valid and report how much was dropped, and never throw.
@@ -10,10 +10,12 @@ export interface PersistedState {
   userName: string;
   medications: Medication[];
   logs: DoseLog[];
+  /** Added in storage version 2. */
+  snoozes: Snooze[];
 }
 
 export interface ParsedPersisted {
-  state: { userName?: string; medications: Medication[]; logs: DoseLog[] };
+  state: { userName?: string; medications: Medication[]; logs: DoseLog[]; snoozes: Snooze[] };
   /** How many entries were invalid and left out. The caller should back up the raw data when this is above 0. */
   dropped: number;
 }
@@ -62,6 +64,14 @@ function parseLog(v: unknown): DoseLog | null {
   return { medicationId, date, time, outcome, loggedAt };
 }
 
+function parseSnooze(v: unknown): Snooze | null {
+  if (!isRecord(v)) return null;
+  const { medicationId, date, time, until } = v;
+  if (!isText(medicationId) || !isDate(date) || !isTime(time)) return null;
+  if (typeof until !== 'string' || Number.isNaN(new Date(until).getTime())) return null;
+  return { medicationId, date, time, until };
+}
+
 /** Returns null only when the value is not a usable state object at all. */
 export function parsePersistedState(raw: unknown): ParsedPersisted | null {
   if (!isRecord(raw) || !Array.isArray(raw.medications) || !Array.isArray(raw.logs)) return null;
@@ -86,7 +96,17 @@ export function parsePersistedState(raw: unknown): ParsedPersisted | null {
     logs.push(log);
   }
 
+  // Missing before version 2. A snooze is short-lived, so a bad one is simply dropped.
+  const snoozes: Snooze[] = [];
+  const rawSnoozes = Array.isArray(raw.snoozes) ? raw.snoozes : [];
+  if (raw.snoozes !== undefined && !Array.isArray(raw.snoozes)) dropped++;
+  for (const item of rawSnoozes) {
+    const snooze = parseSnooze(item);
+    if (snooze) snoozes.push(snooze);
+    else dropped++;
+  }
+
   const hasName = isText(raw.userName);
   if (raw.userName !== undefined && !hasName) dropped++;
-  return { state: { ...(hasName ? { userName: raw.userName as string } : {}), medications, logs }, dropped };
+  return { state: { ...(hasName ? { userName: raw.userName as string } : {}), medications, logs, snoozes }, dropped };
 }

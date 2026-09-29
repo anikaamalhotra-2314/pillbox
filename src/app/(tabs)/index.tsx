@@ -8,7 +8,9 @@ import { borderWidth, color, space } from '@/design-system/tokens';
 import { toLocalDate } from '@/domain/dates';
 import { buildDay, doseKey, type DayEntry } from '@/domain/day';
 import { formatTime, greetingFor, medicationSubtitle, monthYearLabel } from '@/domain/format';
+import { canSnooze, snoozedUntil, SNOOZE_MINUTES } from '@/domain/reminders';
 import { doseActions, type DoseAction } from '@/domain/status';
+import { remindersAvailable } from '@/features/reminders/notifier';
 import { DoseCard } from '@/features/today/DoseCard';
 import { WeekStrip } from '@/features/today/WeekStrip';
 import { useNow } from '@/hooks/use-now';
@@ -17,7 +19,12 @@ import { FocusedScene } from '@/design-system/primitives/FocusedScene';
 import { Pressable } from '@/design-system/primitives/Pressable';
 import { ActionMenu } from '@/design-system/primitives/ActionMenu';
 
-const ACTION_LABELS: Record<DoseAction, string> = { skip: 'Skip this dose', unskip: 'Undo skip', edit: 'Edit medication' };
+const ACTION_LABELS: Record<DoseAction, string> = {
+  skip: 'Skip this dose',
+  unskip: 'Undo skip',
+  snooze: `Snooze ${SNOOZE_MINUTES} minutes`,
+  edit: 'Edit medication',
+};
 
 const rule = { borderBottomWidth: borderWidth.default, borderBottomColor: color.border.strong } as const;
 
@@ -32,6 +39,8 @@ export default function Today() {
   const logs = usePillbox((s) => s.logs);
   const toggleTaken = usePillbox((s) => s.toggleTaken);
   const toggleSkipped = usePillbox((s) => s.toggleSkipped);
+  const snooze = usePillbox((s) => s.snooze);
+  const snoozes = usePillbox((s) => s.snoozes);
   const [menuFor, setMenuFor] = useState<DayEntry | null>(null);
 
   const entries = useMemo(() => buildDay(medications, logs, selected, now), [medications, logs, selected, now]);
@@ -77,6 +86,7 @@ export default function Today() {
             status={e.status}
             alertsEnabled={e.medication.alertsEnabled}
             loggedAt={e.log?.loggedAt}
+            snoozedUntil={snoozedUntil(snoozes, e.dose, now)}
             onOpen={() => router.push({ pathname: '/medication/[id]', params: { id: e.medication.id } })}
             onToggleTaken={() => toggleTaken(e.dose, now)}
             onOpenMenu={() => setMenuFor(e)}
@@ -87,12 +97,16 @@ export default function Today() {
       <ActionMenu
         visible={menuFor !== null}
         title={menuFor ? `${menuFor.medication.name}, ${formatTime(menuFor.dose.time)}` : ''}
-        actions={menuFor ? doseActions(menuFor.status).map((action) => ({
+        actions={menuFor ? doseActions(menuFor.status, {
+          snoozable: remindersAvailable && canSnooze(menuFor.status, menuFor.medication.alertsEnabled),
+        }).map((action) => ({
           label: ACTION_LABELS[action],
           onPress: () => {
             setMenuFor(null);
             if (action === 'edit') {
               router.push({ pathname: '/medication/[id]', params: { id: menuFor.medication.id, edit: '1' } });
+            } else if (action === 'snooze') {
+              snooze(menuFor.dose, new Date());
             } else {
               toggleSkipped(menuFor.dose, new Date());
             }

@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { color, fontFamily } from '@/design-system/tokens';
+import { useReminderSync } from '@/features/reminders/use-reminder-sync';
 import { useHydrated } from '@/store/use-hydrated';
 
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +20,7 @@ export default function RootLayout() {
   });
 
   const hydrated = useHydrated();
+  useReminderSync(hydrated);
   // On a font error, fall through to system fonts rather than trapping the user on the splash.
   const ready = (loaded || error) && hydrated;
 

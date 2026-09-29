@@ -35,6 +35,11 @@ export interface DoseLog extends Dose {
   loggedAt: string; // ISO 8601
 }
 
+/** A dose's reminder, re-sent at `until` (ISO 8601). Stored so it survives a restart. */
+export interface Snooze extends Dose {
+  until: string;
+}
+
 export type DoseStatus =
   | 'upcoming' // today, before the scheduled time
   | 'due' // today, from the scheduled time until the grace window ends

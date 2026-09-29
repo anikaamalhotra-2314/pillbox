@@ -6,7 +6,7 @@ const log = { medicationId: 'a', date: '2025-03-15', time: '06:30', outcome: 'ta
 describe('parsePersistedState', () => {
   it('accepts valid state unchanged', () => {
     expect(parsePersistedState({ userName: 'Anika', medications: [med], logs: [log] })).toEqual({
-      state: { userName: 'Anika', medications: [med], logs: [log] }, dropped: 0,
+      state: { userName: 'Anika', medications: [med], logs: [log], snoozes: [] }, dropped: 0,
     });
   });
   it('returns null when the value is not a state object', () => {
@@ -82,5 +82,19 @@ describe('icon', () => {
     expect(parsed?.state.medications).toHaveLength(2);
     expect(parsed?.state.medications[0]).not.toHaveProperty('icon');
     expect(parsed?.dropped).toBe(0);
+  });
+});
+
+describe('snoozes (storage version 2)', () => {
+  const snooze = { medicationId: 'a', date: '2025-03-15', time: '06:30', until: '2025-03-15T13:40:00.000Z' };
+  it('treats missing snoozes, as saved by version 1, as none', () => {
+    expect(parsePersistedState({ medications: [med], logs: [] })?.state.snoozes).toEqual([]);
+  });
+  it('keeps valid snoozes and drops invalid ones', () => {
+    const parsed = parsePersistedState({ medications: [], logs: [], snoozes: [snooze, { ...snooze, until: 'soon' }, { ...snooze, time: '6:30' }, 7] });
+    expect(parsed).toEqual({ state: { medications: [], logs: [], snoozes: [snooze] }, dropped: 3 });
+  });
+  it('counts a snoozes value that is not a list as dropped', () => {
+    expect(parsePersistedState({ medications: [], logs: [], snoozes: 'x' })).toEqual({ state: { medications: [], logs: [], snoozes: [] }, dropped: 1 });
   });
 });

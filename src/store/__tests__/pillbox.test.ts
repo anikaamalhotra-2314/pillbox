@@ -68,8 +68,8 @@ describe('persistence', () => {
     store.getState().addMedication(med);
     await flush();
     const stored = JSON.parse(data.get(STORAGE_KEY)!);
-    expect(Object.keys(stored.state).sort()).toEqual(['logs', 'medications', 'userName']);
-    expect(stored.version).toBe(1);
+    expect(Object.keys(stored.state).sort()).toEqual(['logs', 'medications', 'snoozes', 'userName']);
+    expect(stored.version).toBe(2);
   });
 
   it('survives corrupt JSON: starts from the sample data and keeps a copy of the bad text', async () => {
@@ -189,5 +189,42 @@ describe('skipping', () => {
     const second = createPillboxStore(raw);
     await second.persist.rehydrate();
     expect(second.getState().logs).toEqual([{ ...dose, outcome: 'skipped', loggedAt: at.toISOString() }]);
+  });
+});
+
+describe('snoozing', () => {
+  const later = new Date(2025, 2, 15, 6, 50);
+
+  it('saves a snooze, and taking the dose ends it', async () => {
+    const { raw } = memoryStorage();
+    const first = createPillboxStore(raw);
+    await first.persist.rehydrate();
+    first.getState().snooze(dose, at);
+    await flush();
+    const second = createPillboxStore(raw);
+    await second.persist.rehydrate();
+    expect(second.getState().snoozes).toEqual([{ ...dose, until: new Date(at.getTime() + 10 * 60_000).toISOString() }]);
+    second.getState().toggleTaken(dose, later);
+    expect(second.getState().snoozes).toEqual([]);
+  });
+
+  it('skipping the dose, or deleting its medication, ends the snooze too', async () => {
+    const { raw } = memoryStorage();
+    const store = createPillboxStore(raw);
+    await store.persist.rehydrate();
+    store.getState().snooze(dose, at);
+    store.getState().toggleSkipped(dose, later);
+    expect(store.getState().snoozes).toEqual([]);
+    store.getState().snooze(dose, at);
+    store.getState().deleteMedication('synthroid');
+    expect(store.getState().snoozes).toEqual([]);
+  });
+
+  it('migrates data saved by version 1: keeps everything and starts with no snoozes', async () => {
+    const log = { ...dose, outcome: 'taken', loggedAt: at.toISOString() };
+    const { raw } = memoryStorage({ [STORAGE_KEY]: saved({ userName: 'Sam', medications: [med], logs: [log] }) });
+    const store = createPillboxStore(raw);
+    await store.persist.rehydrate();
+    expect(store.getState()).toMatchObject({ userName: 'Sam', medications: [med], logs: [log], snoozes: [] });
   });
 });

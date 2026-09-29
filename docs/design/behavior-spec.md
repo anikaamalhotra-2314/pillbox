@@ -49,3 +49,11 @@ Grace window and late logging are decided. The visual treatments below are still
   - Built in [0025](../decisions/0025-dose-card-menu.md). Options depend on state: Skip / Undo skip, and Edit; a future dose offers only Edit.
   - **Snooze** (decided in session): re-sends the reminder 10 minutes later. It does not move the dose: its time, status and due/overdue window stay the same.
 - Details screen: Pause or Delete medication (destructive, confirm first). The delete/pause flows need design.
+
+## Reminders ([0026](../decisions/0026-local-reminders-and-snooze.md)) — PROPOSED, iOS only
+
+- One reminder per unlogged dose, at its scheduled time, for medications with alerts on. Planned 14 days ahead, at most 64 pending (the iOS limit), and refreshed whenever data changes or the app opens.
+- Text: "Time for Synthroid" / "7:00pm · 1 pill | 125mg". Tapping opens Today.
+- Snooze: 10 minutes, from the dose menu, for a due or overdue dose. The card shows "snoozed 10:55am". Logging the dose ends it.
+- Permission is asked the first time there is anything to remind about.
+- Web: no reminders, no Snooze.

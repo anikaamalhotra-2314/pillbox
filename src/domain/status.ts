@@ -35,10 +35,13 @@ export function logDose(dose: Dose, outcome: DoseOutcome, now: Date): DoseLog {
   return { ...dose, outcome, loggedAt: now.toISOString() };
 }
 
-export type DoseAction = 'skip' | 'unskip' | 'edit';
+export type DoseAction = 'skip' | 'unskip' | 'snooze' | 'edit';
 
-/** What the dose card's "..." menu offers (decision 0011). A future dose can only be edited. */
-export function doseActions(status: DoseStatus): DoseAction[] {
+/**
+ * What the dose card's "..." menu offers (decision 0011). A future dose can only be edited.
+ * `snoozable` comes from `canSnooze` and whether this device can deliver reminders at all.
+ */
+export function doseActions(status: DoseStatus, { snoozable = false } = {}): DoseAction[] {
   if (!canLog(status)) return ['edit'];
-  return [status === 'skipped' ? 'unskip' : 'skip', 'edit'];
+  return [status === 'skipped' ? 'unskip' : 'skip', ...(snoozable ? (['snooze'] as const) : []), 'edit'];
 }
