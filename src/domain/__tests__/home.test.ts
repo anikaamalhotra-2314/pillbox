@@ -1,7 +1,7 @@
 import { doseKey } from '../day';
 import {
   availability, coinBalance, decorateItem, decorateRoom, COINS_PER_DOSE, DEV_GRANT_KEY, grantCoins, earnedFromLogs, earnedOn, emptyHome, isOnTime, isOwned, nextGoal, purchase,
-  purchasedIn, settleDose, type HomeState,
+  isPlaced, purchasedIn, settleDose, type HomeState,
 } from '../home';
 import { BUILD_ORDER, CATALOG, catalogEntry, FLOORS, isCatalogId, ITEMS, prerequisite, ROOMS, type CatalogId } from '../home-catalog';
 import type { Dose, DoseLog, Medication } from '../types';
@@ -209,22 +209,39 @@ describe('decorating', () => {
     expect(decorateItem(changed, 'sofa', { color: null }).decor.items.sofa).toEqual({ dx: 10 });
     expect(decorateItem(changed, 'sofa', { dx: 0, color: null }).decor.items).toEqual({});
   });
+  it('moves furniture forward and back as well as sideways, independently', () => {
+    const moved = decorateItem(home, 'sofa', { dx: 10, dy: -6.6 });
+    expect(moved.decor.items.sofa).toEqual({ dx: 10, dy: -7 });
+    expect(decorateItem(moved, 'sofa', { dy: null }).decor.items.sofa).toEqual({ dx: 10 });
+    expect(decorateItem(home, 'sofa', { dy: Number.POSITIVE_INFINITY })).toBe(home);
+  });
+  it('puts furniture away and brings it back out, keeping where it was', () => {
+    const away = decorateItem(decorateItem(home, 'sofa', { dx: 10 }), 'sofa', { stored: true });
+    expect(away.decor.items.sofa).toEqual({ dx: 10, stored: true });
+    expect([isOwned(away, 'sofa'), isPlaced(away, 'sofa')]).toEqual([true, false]);
+    expect(decorateItem(away, 'sofa', { stored: null }).decor.items.sofa).toEqual({ dx: 10 });
+  });
+  it('turns a piece to face the other way and back', () => {
+    const turned = decorateItem(home, 'sofa', { flip: true });
+    expect(turned.decor.items.sofa).toEqual({ flip: true });
+    expect(decorateItem(turned, 'sofa', { flip: null }).decor.items).toEqual({});
+  });
   it('is free: the balance never changes', () => {
     expect(coinBalance(decorateItem(home, 'sofa', { color: 'mint' }))).toBe(coinBalance(home));
   });
   it('ignores furniture and rooms you do not own, and nonsense moves', () => {
     expect(decorateItem(home, 'bed', { dx: 5 })).toBe(home);
-    expect(decorateRoom(home, 'bedroom', { wall: 'mint' })).toBe(home);
+    expect(decorateRoom(home, 'bedroom', { wall: 'maroon' })).toBe(home);
     expect(decorateItem(home, 'sofa', { dx: Number.NaN })).toBe(home);
   });
   it('repaints walls and changes floors, including the living room you start with', () => {
     const start = emptyHome();
-    const painted = decorateRoom(decorateRoom(start, 'living', { wall: 'lilac' }), 'living', { floor: 'checker' });
-    expect(painted.decor.rooms.living).toEqual({ wall: 'lilac', floor: 'checker' });
+    const painted = decorateRoom(decorateRoom(start, 'living', { wall: 'mustard' }), 'living', { floor: 'checker' });
+    expect(painted.decor.rooms.living).toEqual({ wall: 'mustard', floor: 'checker' });
     expect(decorateRoom(painted, 'living', { wall: null, floor: null }).decor.rooms).toEqual({});
   });
   it('has no walls or floor to change in the garden', () => {
     const garden = richHome(0, ['kitchen', 'dining', 'garden']);
-    expect(decorateRoom(garden, 'garden', { wall: 'mint' })).toBe(garden);
+    expect(decorateRoom(garden, 'garden', { wall: 'maroon' })).toBe(garden);
   });
 });

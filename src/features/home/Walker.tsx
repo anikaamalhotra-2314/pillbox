@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
+import type { Avatar } from '@/domain/avatar';
 import { Person } from './art/characters';
-import { distance, planWalk, type Spot } from './walk';
+import { distance, planWalk, stairAngle, stairX, type Spot } from './walk';
 
 /** Walking pace, in scene units per second. */
 const SPEED = 55;
@@ -17,20 +18,23 @@ type Props = {
   animate: boolean;
   floorLine: (level: number) => number;
   floorHeight: number;
-  /** Where they may wander from a spot on their own, if anywhere. */
-  wanderSpan: (spot: Spot) => [number, number] | undefined;
+  /** Where to wander to next when left alone, from where they are, if anywhere. */
+  wanderTo: (from: Spot) => Spot | undefined;
   start: Spot;
+  /** How the person looks. */
+  avatar?: Avatar;
 };
 
 /**
  * The person, walking. Positions advance on animation frames rather than the scene's stepped clock, so walking
  * is smooth; only this component re-renders while it happens.
  */
-export function Walker({ target, animate, floorLine, floorHeight, wanderSpan, start }: Props) {
+export function Walker({ target, animate, floorLine, floorHeight, wanderTo, start, avatar }: Props) {
   const [pos, setPos] = useState<Spot>(start);
   const [facing, setFacing] = useState<1 | -1>(1);
   const [walking, setWalking] = useState(false);
   const [stride, setStride] = useState<0 | 1>(0);
+  const [climbingUp, setClimbingUp] = useState(true);
   const path = useRef<Spot[]>([]);
   const travelled = useRef(0);
   const posRef = useRef(pos);
@@ -73,6 +77,7 @@ export function Walker({ target, animate, floorLine, floorHeight, wanderSpan, st
         const next = path.current[0];
         const d = distance(p, next, floorHeight);
         if (next.x !== p.x) setFacing(next.x > p.x ? 1 : -1);
+        if (next.level !== p.level) setClimbingUp(next.level > p.level);
         if (d <= budget) {
           budget -= d;
           travelled.current += d;
@@ -107,14 +112,17 @@ export function Walker({ target, animate, floorLine, floorHeight, wanderSpan, st
   useEffect(() => {
     if (!animate || walking) return;
     const id = setTimeout(() => {
-      const span = wanderSpan(posRef.current);
-      if (!span) return;
-      const x = Math.round(span[0] + Math.random() * (span[1] - span[0]));
-      go({ x, level: posRef.current.level });
+      const to = wanderTo(posRef.current);
+      if (to) go(to);
     }, IDLE_MS * (1 + Math.random()));
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animate, walking]);
 
-  return <Person x={pos.x} feetY={floorLine(pos.level)} facing={facing} walking={walking} stride={stride} />;
+  // On the stairs, go round the spiral, facing the way you're going round (which flips with up or down).
+  const onStairs = !Number.isInteger(pos.level);
+  const round = Math.cos(stairAngle(pos.level - Math.floor(pos.level))) >= 0 ? 1 : -1;
+  const x = onStairs ? stairX(pos.level) : pos.x;
+  const face = onStairs ? ((climbingUp ? round : -round) as 1 | -1) : facing;
+  return <Person x={x} feetY={floorLine(pos.level)} facing={face} walking={walking} stride={stride} avatar={avatar} />;
 }

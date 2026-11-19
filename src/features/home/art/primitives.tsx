@@ -83,3 +83,27 @@ export function LightCone({ points, look, thumb }: { points: string; look: Look;
   if (thumb || look.glow === 0) return null;
   return <Polygon points={points} fill={scene.glow} opacity={look.glow * (strong ? 1 : 0.75)} />;
 }
+
+/**
+ * A flat pixel oval of shade on the floor, centred on `cx` with its middle on `y` (where the piece's feet are).
+ * Drawn before the piece, so the piece covers its top half. Whole-unit rows keep it crisp, like the pixel art.
+ */
+export function GroundShadow({ cx, y, w, h }: { cx: number; y: number; w: number; h: number }) {
+  const rows = Array.from({ length: h }, (_, i) => {
+    const t = (i + 0.5 - h / 2) / (h / 2);
+    return Math.round((w / 2) * Math.sqrt(1 - t * t));
+  });
+  const top = Math.round(y - h / 2);
+  return (
+    <G opacity={scene.groundShadow.opacity}>
+      {rows.map((half, i) => <Rect key={i} x={Math.round(cx) - half} y={top + i} width={half * 2} height={1} fill={scene.groundShadow.color} />)}
+    </G>
+  );
+}
+
+/** A color part way from `from` to `to` (0 is `from`, 1 is `to`), for deriving shades of a paint. */
+export function mixColor(from: string, to: string, t: number): string {
+  const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const b = rgb(to);
+  return `#${rgb(from).map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('')}`;
+}

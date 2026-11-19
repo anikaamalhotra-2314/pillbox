@@ -63,7 +63,11 @@ export function WeekStrip({ today, selected, onSelect }: Props) {
 
   return (
     <View
-      onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
+      onLayout={(e: LayoutChangeEvent) => {
+        // A hidden tab measures 0 wide; keep the last width so the strip is not rebuilt (and re-scrolled) on return.
+        const w = e.nativeEvent.layout.width;
+        if (w > 0) setWidth(w);
+      }}
       {...webKeyProps}
     >
       {width > 0 && (

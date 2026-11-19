@@ -1,6 +1,7 @@
+import { withAvatar, type Avatar } from './avatar';
 import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
 import { earnedFromLogs, type Decor, type HomeState, type Purchase } from './home';
-import { catalogEntry, isCatalogId, isFloorStyle, isPaint, type ItemId, type RoomId } from './home-catalog';
+import { catalogEntry, isCatalogId, isFloorStyle, isPaint, isWallPaint, type ItemId, type RoomId } from './home-catalog';
 import { MAX_GRACE_MINUTES } from './medication';
 import { isPillIcon } from './pill-icon';
 import type { DoseLog, Medication, Snooze } from './types';
@@ -90,6 +91,9 @@ function parsePurchase(v: unknown): Purchase | null {
 }
 
 const MAX_DX = 600;
+/** A room is 190 units tall, so no forward or back move is bigger than that. */
+const MAX_DY = 190;
+const move = (d: unknown, max: number) => (typeof d === 'number' && Number.isFinite(d) && d !== 0 && Math.abs(d) <= max ? Math.round(d) : undefined);
 
 /** Cosmetic, like pill icons: anything unrecognised is ignored rather than counted as lost data. Missing before version 4. */
 function parseDecor(raw: unknown): Decor {
@@ -97,13 +101,22 @@ function parseDecor(raw: unknown): Decor {
   if (!isRecord(raw)) return decor;
   for (const [id, v] of Object.entries(isRecord(raw.items) ? raw.items : {})) {
     if (!isCatalogId(id) || catalogEntry(id).kind !== 'item' || !isRecord(v)) continue;
-    const dx = typeof v.dx === 'number' && Number.isFinite(v.dx) && v.dx !== 0 && Math.abs(v.dx) <= MAX_DX ? Math.round(v.dx) : undefined;
+    const dx = move(v.dx, MAX_DX);
+    const dy = move(v.dy, MAX_DY);
     const color = isPaint(v.color) ? v.color : undefined;
-    if (dx || color) decor.items[id as ItemId] = { ...(dx ? { dx } : {}), ...(color ? { color } : {}) };
+    const stored = v.stored === true;
+    const flip = v.flip === true;
+    if (dx || dy || color || stored || flip) {
+      decor.items[id as ItemId] = {
+        ...(dx ? { dx } : {}), ...(dy ? { dy } : {}), ...(color ? { color } : {}),
+        ...(stored ? { stored: true as const } : {}), ...(flip ? { flip: true as const } : {}),
+      };
+    }
   }
   for (const [id, v] of Object.entries(isRecord(raw.rooms) ? raw.rooms : {})) {
     if (!isCatalogId(id) || catalogEntry(id).kind !== 'room' || !isRecord(v)) continue;
-    const wall = isPaint(v.wall) ? v.wall : undefined;
+    // Walls painted from the old pill-color palette are forgotten: they go back to the room's own color.
+    const wall = isWallPaint(v.wall) ? v.wall : undefined;
     const floor = isFloorStyle(v.floor) ? v.floor : undefined;
     if (wall || floor) decor.rooms[id as RoomId] = { ...(wall ? { wall } : {}), ...(floor ? { floor } : {}) };
   }
@@ -129,7 +142,8 @@ function parseHome(raw: unknown, medications: Medication[], logs: DoseLog[]): { 
     purchases.push(p);
   }
   if (raw.purchases !== undefined && !Array.isArray(raw.purchases)) dropped++;
-  return { home: { earned, purchases, decor: parseDecor(raw.decor) }, dropped };
+  const avatar = isRecord(raw.avatar) ? withAvatar(undefined, raw.avatar as Partial<Avatar>) : undefined;
+  return { home: { earned, purchases, decor: parseDecor(raw.decor), ...(avatar ? { avatar } : {}) }, dropped };
 }
 
 /** Returns null only when the value is not a usable state object at all. */

@@ -2,11 +2,9 @@
 
 A running record of who decided what while building Pillbox, so the case study can show real AI-assisted work with real human judgment, backed by evidence instead of claims.
 
-## Two layers
+## Decision entries
 
-**1. Decision entries (this folder).** One markdown file per meaningful decision. Aim for roughly 25-40 over the project, not one per keystroke. Copy `_template.md` to `NNNN-slug.md`, or run `/log-decision` in Claude Code and let it draft everything except your reasoning.
-
-**2. Commit trailers (git).** Every commit records `Origin:` and `Tool:`. Commit the AI's first pass as `ai: ...` before you refine it, then your changes as `human: ...`. The diff between them is your before/after.
+One markdown file per meaningful decision. Aim for roughly 25-40 over the project, not one per keystroke. Copy `_template.md` to `NNNN-slug.md`, or run `/log-decision` in Claude Code and let it draft everything except your reasoning.
 
 ## Vocabulary
 
@@ -31,4 +29,4 @@ A running record of who decided what while building Pillbox, so the case study c
 node scripts/decision-stats.mjs
 ```
 
-Prints the split by origin, outcome, and area, plus commit counts by trailer. Paste the output into the case study.
+Prints the split by origin, outcome, and area. Paste the output into the case study.

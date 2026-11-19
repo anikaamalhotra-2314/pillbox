@@ -1,7 +1,8 @@
+import { withAvatar, type Avatar } from './avatar';
 import { scheduledInstant, type LocalDate } from './dates';
 import { doseKey } from './day';
 import {
-  BUILD_ORDER, catalogEntry, ITEMS, prerequisite, type CatalogEntry, type CatalogId, type FloorStyle, type ItemId, type Paint, type RoomId,
+  BUILD_ORDER, catalogEntry, ITEMS, prerequisite, type CatalogEntry, type CatalogId, type FloorStyle, type ItemId, type Paint, type RoomId, type WallPaint,
 } from './home-catalog';
 import type { Dose, DoseLog, Medication } from './types';
 
@@ -17,14 +18,21 @@ export interface Purchase {
   at: string; // ISO 8601
 }
 
-/** How a piece of furniture was changed from how it comes: slid sideways (`dx`, in scene units) or repainted. */
+/**
+ * How a piece of furniture was changed from how it comes: moved (`dx` sideways, `dy` forward or back on the floor,
+ * in scene units; down is positive), repainted, turned to face the other way, or put away (still yours, just not
+ * in the room).
+ */
 export interface ItemDecor {
   dx?: number;
+  dy?: number;
+  stored?: true;
   color?: Paint;
+  flip?: true;
 }
 
 export interface RoomDecor {
-  wall?: Paint;
+  wall?: WallPaint;
   floor?: FloorStyle;
 }
 
@@ -40,6 +48,15 @@ export interface HomeState {
   purchases: Purchase[];
   /** Added in storage version 4. Free to change at any time. */
   decor: Decor;
+  /** How the person looks, where it differs from how they come. Free to change at any time. */
+  avatar?: Partial<Avatar>;
+}
+
+/** Changes how the person looks. Free. */
+export function changeAvatar(home: HomeState, change: Partial<Avatar>): HomeState {
+  const avatar = withAvatar(home.avatar, change);
+  const { avatar: _old, ...rest } = home;
+  return avatar ? { ...rest, avatar } : rest;
 }
 
 export const emptyHome = (): HomeState => ({ earned: {}, purchases: [], decor: { items: {}, rooms: {} } });
@@ -103,6 +120,11 @@ export function isOwned(home: HomeState, id: CatalogId): boolean {
   return catalogEntry(id).price === 0 || home.purchases.some((p) => p.id === id);
 }
 
+/** Furniture you own and haven't put away: it's in its room. */
+export function isPlaced(home: HomeState, id: ItemId): boolean {
+  return isOwned(home, id) && !home.decor.items[id]?.stored;
+}
+
 export type Availability =
   | { kind: 'owned' }
   | { kind: 'locked'; needs: CatalogId }
@@ -159,20 +181,23 @@ function withEntry<K extends string, V>(map: Partial<Record<K, V>>, key: K, valu
   return (value === undefined ? rest : { ...rest, [key]: value }) as Partial<Record<K, V>>;
 }
 
+export type ItemChange = { dx?: number | null; dy?: number | null; color?: Paint | null; stored?: true | null; flip?: true | null };
+
 /**
- * Moves or repaints a piece of furniture you own. Free, as often as you like. `dx` is rounded to whole units;
+ * Moves or repaints a piece of furniture you own. Free, as often as you like. `dx` and `dy` are rounded to whole units;
  * the caller keeps it inside the room. Does nothing for furniture you don't own.
  */
-export function decorateItem(home: HomeState, id: ItemId, change: { dx?: number | null; color?: Paint | null }): HomeState {
+export function decorateItem(home: HomeState, id: ItemId, change: ItemChange): HomeState {
   if (!isOwned(home, id)) return home;
-  if (typeof change.dx === 'number' && !Number.isFinite(change.dx)) return home;
-  const rounded = typeof change.dx === 'number' ? { ...change, dx: Math.round(change.dx) } : change;
+  if ([change.dx, change.dy].some((d) => typeof d === 'number' && !Number.isFinite(d))) return home;
+  const round = (d: number | null | undefined) => (typeof d === 'number' ? Math.round(d) : d);
+  const rounded = { ...change, ...('dx' in change ? { dx: round(change.dx) } : {}), ...('dy' in change ? { dy: round(change.dy) } : {}) };
   const items = withEntry(home.decor.items, id, merged(home.decor.items[id], rounded));
   return { ...home, decor: { ...home.decor, items } };
 }
 
 /** Repaints the walls or changes the floor of a room you own. Free. Not outdoors: the garden has neither. */
-export function decorateRoom(home: HomeState, id: RoomId, change: { wall?: Paint | null; floor?: FloorStyle | null }): HomeState {
+export function decorateRoom(home: HomeState, id: RoomId, change: { wall?: WallPaint | null; floor?: FloorStyle | null }): HomeState {
   const entry = catalogEntry(id);
   if (!isOwned(home, id) || (entry.kind === 'room' && entry.outdoor)) return home;
   const rooms = withEntry(home.decor.rooms, id, merged(home.decor.rooms[id], change));

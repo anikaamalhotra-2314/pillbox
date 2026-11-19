@@ -7,7 +7,7 @@ import { MovingBoxes } from './art/characters';
 import { ITEM_ART, type Tint } from './art/items';
 import type { Look } from './art/primitives';
 import { RoomShell } from './art/rooms';
-import { offsetOf, ownedIn } from './placement';
+import { offsetOf, ownedIn, type Draft } from './placement';
 
 /** The living room stays half-packed until this many things have been bought for it. */
 const UNPACKED_AFTER = 3;
@@ -20,17 +20,22 @@ export function tintOf(home: HomeState, id: ItemId): Tint {
 }
 
 /** One room as decorated: its walls and floor, then each piece you own where you put it. In room-local units. */
-export function RoomContents({ home, roomId, look, draft }: { home: HomeState; roomId: RoomId; look: Look; draft?: { id: ItemId; dx: number } }) {
+export function RoomContents({ home, roomId, look, draft }: { home: HomeState; roomId: RoomId; look: Look; draft?: Draft }) {
   const owns = (id: ItemId) => isOwned(home, id);
   return (
     <>
       <RoomShell id={roomId} decor={home.decor.rooms[roomId]} look={look} thumb={false} />
       {roomId === 'living' && purchasedIn(home, 'living') < UNPACKED_AFTER && <MovingBoxes />}
-      {ownedIn(home, roomId).map((id) => (
-        <G key={id} transform={`translate(${offsetOf(home, id, draft)} 0)`}>
-          {ITEM_ART[id].draw({ look, thumb: false, owns, tint: tintOf(home, id) })}
-        </G>
-      ))}
+      {ownedIn(home, roomId, draft).map((id) => {
+        const { dx, dy } = offsetOf(home, id, draft);
+        const [bx, , bw] = ITEM_ART[id].box;
+        const mirror = ITEM_ART[id].flips && home.decor.items[id]?.flip ? ` translate(${2 * bx + bw} 0) scale(-1 1)` : '';
+        return (
+          <G key={id} transform={`translate(${dx} ${dy})${mirror}`}>
+            {ITEM_ART[id].draw({ look, thumb: false, owns, tint: tintOf(home, id) })}
+          </G>
+        );
+      })}
     </>
   );
 }

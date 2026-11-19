@@ -304,11 +304,11 @@ describe('coins and the home', () => {
     store.getState().grantCoins(200);
     store.getState().buy('sofa', onTime);
     store.getState().decorateItem('sofa', { dx: -30, color: 'mint' });
-    store.getState().decorateRoom('living', { wall: 'lilac', floor: 'walnut' });
+    store.getState().decorateRoom('living', { wall: 'mustard', floor: 'walnut' });
     await flush();
     const again = createPillboxStore(raw);
     await again.persist.rehydrate();
-    expect(again.getState().home.decor).toEqual({ items: { sofa: { dx: -30, color: 'mint' } }, rooms: { living: { wall: 'lilac', floor: 'walnut' } } });
+    expect(again.getState().home.decor).toEqual({ items: { sofa: { dx: -30, color: 'mint' } }, rooms: { living: { wall: 'mustard', floor: 'walnut' } } });
     expect(coinBalance(again.getState().home)).toBe(80);
   });
 

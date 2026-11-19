@@ -6,10 +6,10 @@ import { PILL_COLORS, type PillColor } from './pill-icon';
 export type FloorId = 'floor-1' | 'floor-2' | 'floor-3';
 export type RoomId = 'living' | 'kitchen' | 'dining' | 'garden' | 'bedroom' | 'bathroom' | 'office' | 'studio' | 'greenhouse';
 export type ItemId =
-  | 'curtains' | 'gallery' | 'pendant' | 'bookshelf' | 'fig' | 'floor-lamp' | 'rug' | 'sofa' | 'coffee-table' | 'cat'
-  | 'jar-shelf' | 'herbs' | 'fridge' | 'kettle'
-  | 'chandelier' | 'sideboard' | 'dining-table'
-  | 'string-lights' | 'wardrobe' | 'mirror' | 'bed' | 'nightstand'
+  | 'window' | 'curtains' | 'gallery' | 'clock' | 'pendant' | 'bookshelf' | 'fig' | 'floor-lamp' | 'rug' | 'sofa' | 'coffee-table' | 'cat'
+  | 'jar-shelf' | 'herbs' | 'fridge' | 'kettle' | 'cafe-curtains'
+  | 'chandelier' | 'sideboard' | 'dining-table' | 'dining-art'
+  | 'string-lights' | 'wardrobe' | 'mirror' | 'bed' | 'nightstand' | 'bedroom-rug' | 'bedroom-art'
   | 'bath-mirror' | 'towels' | 'tub' | 'duck'
   | 'corkboard' | 'filing-cabinet' | 'computer-desk'
   | 'flower-bed' | 'birdbath' | 'apple-tree' | 'bench'
@@ -79,11 +79,13 @@ export const ROOMS: readonly RoomEntry[] = [
 
 // Back to front within each room: wall pieces first, then furniture, then what sits on it.
 export const ITEMS: readonly ItemEntry[] = [
+  { kind: 'item', id: 'window', name: 'Window', price: 0, room: 'living' },
   { kind: 'item', id: 'rug', name: 'Rug', price: 20, room: 'living' },
-  { kind: 'item', id: 'fig', name: 'Fiddle-leaf fig', price: 30, room: 'living' },
-  { kind: 'item', id: 'pendant', name: 'Pendant light', price: 35, room: 'living' },
+  { kind: 'item', id: 'fig', name: 'Kentia palm', price: 30, room: 'living' },
+  { kind: 'item', id: 'pendant', name: 'Paper lantern', price: 35, room: 'living' },
   { kind: 'item', id: 'floor-lamp', name: 'Floor lamp', price: 40, room: 'living' },
-  { kind: 'item', id: 'gallery', name: 'Gallery wall', price: 45, room: 'living' },
+  { kind: 'item', id: 'gallery', name: 'Abstract painting', price: 45, room: 'living' },
+  { kind: 'item', id: 'clock', name: 'Ball clock', price: 30, room: 'living' },
   { kind: 'item', id: 'curtains', name: 'Curtains', price: 50, room: 'living' },
   { kind: 'item', id: 'coffee-table', name: 'Coffee table', price: 60, room: 'living' },
   { kind: 'item', id: 'bookshelf', name: 'Bookshelf', price: 90, room: 'living' },
@@ -91,11 +93,13 @@ export const ITEMS: readonly ItemEntry[] = [
   { kind: 'item', id: 'cat', name: 'A cat', price: 200, room: 'living' },
 
   { kind: 'item', id: 'kettle', name: 'Kettle', price: 25, room: 'kitchen' },
+  { kind: 'item', id: 'cafe-curtains', name: 'Café curtains', price: 35, room: 'kitchen' },
   { kind: 'item', id: 'herbs', name: 'Herb pots', price: 30, room: 'kitchen' },
   { kind: 'item', id: 'jar-shelf', name: 'Jar shelf', price: 40, room: 'kitchen' },
   { kind: 'item', id: 'fridge', name: 'Fridge', price: 80, room: 'kitchen' },
 
   { kind: 'item', id: 'chandelier', name: 'Chandelier', price: 60, room: 'dining' },
+  { kind: 'item', id: 'dining-art', name: 'Sunset print', price: 40, room: 'dining' },
   { kind: 'item', id: 'sideboard', name: 'Sideboard', price: 70, room: 'dining' },
   { kind: 'item', id: 'dining-table', name: 'Dining table', price: 110, room: 'dining' },
 
@@ -104,9 +108,11 @@ export const ITEMS: readonly ItemEntry[] = [
   { kind: 'item', id: 'bench', name: 'Bench', price: 60, room: 'garden' },
   { kind: 'item', id: 'apple-tree', name: 'Apple tree', price: 100, room: 'garden' },
 
-  { kind: 'item', id: 'string-lights', name: 'String lights', price: 35, room: 'bedroom' },
+  { kind: 'item', id: 'string-lights', name: 'Wall lanterns', price: 35, room: 'bedroom' },
+  { kind: 'item', id: 'bedroom-art', name: 'Red abstract print', price: 45, room: 'bedroom' },
+  { kind: 'item', id: 'bedroom-rug', name: 'Bedroom rug', price: 25, room: 'bedroom' },
   { kind: 'item', id: 'mirror', name: 'Mirror', price: 40, room: 'bedroom' },
-  { kind: 'item', id: 'nightstand', name: 'Nightstand', price: 45, room: 'bedroom' },
+  { kind: 'item', id: 'nightstand', name: 'Floating nightstand', price: 45, room: 'bedroom' },
   { kind: 'item', id: 'wardrobe', name: 'Wardrobe', price: 110, room: 'bedroom' },
   { kind: 'item', id: 'bed', name: 'Bed', price: 150, room: 'bedroom' },
 
@@ -176,4 +182,16 @@ export const FLOOR_STYLES = [
 export type FloorStyle = (typeof FLOOR_STYLES)[number]['id'];
 
 export const isPaint = (v: unknown): v is Paint => PAINTS.some((p) => p.id === v);
+
+/** Wall paint has its own mid-century palette, separate from the pill colors that furniture uses. */
+export const WALL_PAINTS = [
+  { id: 'cream', name: 'Cream' },
+  { id: 'mustard', name: 'Mustard' },
+  { id: 'brown', name: 'Deep brown' },
+  { id: 'turquoise', name: 'Turquoise' },
+  { id: 'cornflower', name: 'Cornflower' },
+  { id: 'maroon', name: 'Maroon' },
+] as const;
+export type WallPaint = (typeof WALL_PAINTS)[number]['id'];
+export const isWallPaint = (v: unknown): v is WallPaint => WALL_PAINTS.some((p) => p.id === v);
 export const isFloorStyle = (v: unknown): v is FloorStyle => FLOOR_STYLES.some((f) => f.id === v);

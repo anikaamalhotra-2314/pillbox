@@ -6,7 +6,7 @@ argument-hint: "[optional: short topic]"
 Draft a decision entry for the work just completed in this session. Topic hint: $ARGUMENTS
 
 1. Read `docs/decisions/_template.md` and list `docs/decisions/` to pick the next number (`NNNN`, zero-padded).
-2. Look at `git log --oneline -15` and `git status` to find the relevant `ai:` / `human:` commits and cite hashes as evidence. If the work isn't committed yet, say so and set `evidence` accordingly.
+2. Look at `git log --oneline -15` and `git status` to find the relevant commits and cite hashes as evidence. If the work isn't committed yet, say so and set `evidence` accordingly.
 3. Write `docs/decisions/NNNN-slug.md` from the template:
    - **Context** and **AI's proposal**: fill in factually from this conversation.
    - **origin / outcome / area / tool**: set from what actually happened. If unclear (for example whether the owner modified your output), ask instead of guessing.

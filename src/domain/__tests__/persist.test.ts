@@ -143,15 +143,24 @@ describe('decor (storage version 4)', () => {
     expect(parsePersistedState({ medications: [], logs: [], home: base })?.state.home.decor).toEqual({ items: {}, rooms: {} });
   });
   it('keeps valid choices, rounding moves', () => {
-    const decor = { items: { sofa: { dx: -12.6, color: 'mint' }, rug: { color: 'rose' } }, rooms: { living: { wall: 'lilac', floor: 'checker' } } };
+    const decor = { items: { sofa: { dx: -12.6, color: 'mint' }, rug: { color: 'rose' } }, rooms: { living: { wall: 'mustard', floor: 'checker' } } };
     expect(parse(decor)?.state.home.decor).toEqual({
-      items: { sofa: { dx: -13, color: 'mint' }, rug: { color: 'rose' } }, rooms: { living: { wall: 'lilac', floor: 'checker' } },
+      items: { sofa: { dx: -13, color: 'mint' }, rug: { color: 'rose' } }, rooms: { living: { wall: 'mustard', floor: 'checker' } },
     });
+  });
+  it('keeps forward and back moves, dropping ones too big for any room', () => {
+    expect(parse({ items: { sofa: { dy: -8.4 }, rug: { dy: 500 } }, rooms: {} })?.state.home.decor.items).toEqual({ sofa: { dy: -8 } });
+  });
+  it('remembers which way a piece was turned', () => {
+    expect(parse({ items: { 'floor-lamp': { flip: true }, rug: { flip: 'left' } }, rooms: {} })?.state.home.decor.items).toEqual({ 'floor-lamp': { flip: true } });
+  });
+  it('remembers furniture that was put away', () => {
+    expect(parse({ items: { sofa: { stored: true }, rug: { stored: 'yes' } }, rooms: {} })?.state.home.decor.items).toEqual({ sofa: { stored: true } });
   });
   it('ignores anything unrecognised without counting it as lost, since it is only cosmetic', () => {
     const decor = {
       items: { sofa: { dx: 'left', color: 'plaid' }, kitchen: { dx: 5 }, spaceship: { dx: 5 }, rug: { dx: 9999 }, bed: 'x' },
-      rooms: { living: { wall: 'plaid', floor: 'lava' }, sofa: { wall: 'mint' } },
+      rooms: { living: { wall: 'plaid', floor: 'lava' }, sofa: { wall: 'maroon' } },
     };
     expect(parse(decor)).toMatchObject({ state: { home: { decor: { items: {}, rooms: {} } } }, dropped: 0 });
   });

@@ -10,10 +10,8 @@ Designs: `docs/design/figma/`. Architecture plan: `docs/architecture.md` (once w
 
 1. **Never write the owner's reasoning for them.** In a decision entry, fill in *Context* and *AI's proposal* factually. For *My call* and *Why*, only use what the owner actually said in the conversation, quoted or closely paraphrased and marked as such. Otherwise leave `TODO(anika)` and tell them it's open.
 2. **Propose options with a recommendation; the owner decides** anything they can see or feel: tokens, type, color, motion timing/easing, copy, interaction feel, architecture trade-offs.
-3. **Commit in two steps when the owner will refine your output.** Commit your first pass as `ai: <what>`, then let the owner's changes land as `human: <what>`. Do not squash these; the diff between them is the before/after for the case study.
-4. **Every commit carries trailers** (see `.gitmessage`): `Origin: ai|human|joint`, `Tool: claude-code|cursor|manual`, optional `Decision: NNNN`. Commits you create use `Origin: ai`, `Tool: claude-code`, in addition to the usual co-author line.
-5. **Record failures.** If the owner catches a bug, wrong assumption, or bad suggestion from you, note it under "Where the AI was wrong" in the relevant decision.
-6. After a meaningful chunk of work (a screen, a component, a domain module, a non-trivial refactor), **offer to run `/log-decision`**. Do not log trivia (renames, formatting, config bumps).
+3. **Record failures.** If the owner catches a bug, wrong assumption, or bad suggestion from you, note it under "Where the AI was wrong" in the relevant decision.
+4. After a meaningful chunk of work (a screen, a component, a domain module, a non-trivial refactor), **offer to run `/log-decision`**. Do not log trivia (renames, formatting, config bumps).
 
 ## Decision log
 

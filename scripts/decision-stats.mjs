@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-// Summarizes docs/decisions/*.md frontmatter and git commit trailers.
+// Summarizes docs/decisions/*.md frontmatter.
 // Usage: node scripts/decision-stats.mjs
 import { readdirSync, readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -56,23 +55,3 @@ if (open.length) {
   for (const e of open) console.log(`  ${e.file}`);
 }
 
-// --- Commit trailers
-try {
-  const log = execSync(
-    'git log --format="%H%x09%(trailers:key=Origin,valueonly,separator=)%x09%(trailers:key=Tool,valueonly,separator=)"',
-    { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
-  )
-    .split("\n")
-    .filter(Boolean)
-    .map((l) => {
-      const [, origin, tool] = l.split("\t");
-      return { origin: (origin || "").trim(), tool: (tool || "").trim() };
-    });
-  console.log(`\nCommits: ${log.length}`);
-  if (log.length) {
-    printTable("Commits by Origin trailer", tally(log, "origin"), log.length);
-    printTable("Commits by Tool trailer", tally(log, "tool"), log.length);
-  }
-} catch {
-  console.log("\nCommits: none yet");
-}

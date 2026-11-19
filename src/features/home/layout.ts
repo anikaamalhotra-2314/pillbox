@@ -116,6 +116,14 @@ export function walkTarget(layout: HouseLayout, level: number, x: number): Spot 
   return { level, x: Math.round(Math.min(layout.walkRight(level), Math.max(STAIRWELL.x + MARGIN - 4, x))) };
 }
 
+/** Somewhere to wander to, anywhere in the home: a random spot in a random room you own, on any floor. */
+export function wanderAnywhere(layout: HouseLayout, random: () => number = Math.random): Spot {
+  const rooms = layout.rooms.filter((r) => r.owned);
+  const room = rooms[Math.floor(random() * rooms.length)];
+  const [min, max] = [room.x + MARGIN + 6, room.x + room.width - MARGIN - 6];
+  return walkTarget(layout, room.level, Math.round(min + random() * (max - min)));
+}
+
 /** The part of a floor the person may wander in on their own: the owned room they're standing in. */
 export function wanderSpan(layout: HouseLayout, spot: Spot): [number, number] | undefined {
   if (!Number.isInteger(spot.level)) return undefined;

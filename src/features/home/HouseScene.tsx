@@ -2,29 +2,45 @@ import { useMemo, useRef, useState } from 'react';
 import { View, type GestureResponderEvent } from 'react-native';
 import Svg, { ClipPath, Defs, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
 
+import { PixelSprite } from '@/design-system/icons/PixelArt';
 import { Pressable } from '@/design-system/primitives/Pressable';
 import { Text } from '@/design-system/primitives/Text';
 import { borderWidth, color, radius, scene, space, type TimeOfDay } from '@/design-system/tokens';
-import { isOwned, type HomeState } from '@/domain/home';
-import { catalogEntry, type CatalogId, type RoomId } from '@/domain/home-catalog';
-import { Block, FrameClock, Twinkle, type Look } from './art/primitives';
-import { Floor, ROOM_HEIGHT, RoomShell, WALL_HEIGHT } from './art/rooms';
+import { avatarOf } from '@/domain/avatar';
+import { isPlaced, type HomeState } from '@/domain/home';
+import { catalogEntry, FLOORS, ROOMS, type CatalogId, type FloorId, type RoomId } from '@/domain/home-catalog';
+import { FrameClock, Twinkle, type Look } from './art/primitives';
+import { SOFA_LIFT } from './art/items';
+import { PixelBeam, PixelGround, PixelPost } from './art/frame';
+import { SpiralStairs } from './art/stairs';
+import { doorway } from './art/sprites/doorway';
+import { stairwell } from './art/sprites/stairwell';
+import { LivingBackdrop, ROOM_HEIGHT, ROOM_WIDTH, RoomShell, wallPaintOf } from './art/rooms';
 import { describeHome } from './describe';
 import {
-  BEAM, CEILING, DOOR_HEIGHT, FLOOR_HEIGHT, GHOST_HEIGHT, HOUSE_LEFT, layoutHouse, ROOM_X, SCENE_WIDTH, STAIRWELL, WALL,
-  walkTarget, wanderSpan, type HouseLayout, type PlacedFloor,
+  BEAM, CEILING, DOOR_HEIGHT, FLOOR_HEIGHT, GHOST_HEIGHT, GROUND, HOUSE_LEFT, layoutHouse, ROOM_X, SCENE_WIDTH, STAIRWELL, WALL,
+  walkTarget, wanderAnywhere, wanderSpan, type HouseLayout, type PlacedFloor,
 } from './layout';
 import { CatRoamer } from './CatRoamer';
 import { offsetOf } from './placement';
 import { RoomContents } from './RoomContents';
 import { Walker } from './Walker';
-import { STAIR_FOOT_X, STAIR_HEAD_X, type Spot } from './walk';
+import type { Spot } from './walk';
 
 // Fixed, so the night sky doesn't reshuffle on every render.
 const STARS = [[362, 40], [431, 53], [462, 26], [488, 62], [379, 15], [20, 47], [69, 25], [274, 39], [223, 57], [147, 9], [96, 17], [523, 28], [326, 60], [180, 44], [590, 22], [655, 48], [712, 30], [760, 58], [845, 20], [820, 44]];
-const SPECKS = Array.from({ length: 24 }, (_, i) => [(i * 137) % SCENE_WIDTH, 12 + ((i * 53) % 44)]);
+/** Where the greenhouse is, so its ceiling can be glass. */
+const GREENHOUSE = (() => {
+  const room = ROOMS.find((r) => r.id === 'greenhouse')!;
+  return { floor: room.floor, x: ROOM_X[room.side], width: ROOM_WIDTH[room.side] };
+})();
+/** The highest floor there is (the attic). */
+const TOP_LEVEL = Math.max(...FLOORS.map((f) => f.level));
+/** The wide room on the left of a floor, beside the stairwell. */
+const leftRoomOf = (floor: FloorId) => ROOMS.find((r) => r.floor === floor && r.side === 'left')!.id;
+
 /** Where the cat naps on the sofa, in living-room units, before the sofa is moved. */
-const SOFA_SEAT = { x: 206, y: 156 };
+const SOFA_SEAT = { x: 206, y: 156 - SOFA_LIFT };
 /** Where you are when the app opens: the middle of the living room. */
 const START: Spot = { x: ROOM_X.left + 100, level: 0 };
 
@@ -55,6 +71,7 @@ export function HouseScene({ home, timeOfDay, userName, scale, animate, onLocked
   const label = describeHome(home, userName);
   const levels = layout.floors.map((f) => f.floor.level);
   const living = layout.rooms.find((r) => r.room.id === 'living');
+  const avatar = useMemo(() => avatarOf(home.avatar), [home.avatar]);
 
   // The tap's position across the scene. `locationX` isn't reliable on web, so measure the scene and use the
   // tap's page position instead, which works the same on iOS and web.
@@ -72,7 +89,9 @@ export function HouseScene({ home, timeOfDay, userName, scale, animate, onLocked
       {look.stars > 0 && STARS.map(([x, y], i) => <Twinkle key={i} x={x} y={y} phase={i} />)}
       <Ellipse cx={800} cy={36} rx={9} ry={9} fill={look.moon} />
       <Topper layout={layout} />
-      {layout.floors.map((f) => <FloorFrame key={f.floor.id} placed={f} look={look} />)}
+      {layout.floors.map((f) => (
+        <FloorFrame key={f.floor.id} placed={f} look={look} wall={wallPaintOf(home.decor.rooms[leftRoomOf(f.floor.id)])} />
+      ))}
       {layout.rooms.map((placed) => (
         <G key={placed.room.id} transform={`translate(${placed.x} ${placed.y})`}>
           {placed.owned
@@ -80,23 +99,40 @@ export function HouseScene({ home, timeOfDay, userName, scale, animate, onLocked
             : <><RoomShell id={placed.room.id} look={look} thumb={false} /><LockedVeil id={placed.room.id} width={placed.width} /></>}
         </G>
       ))}
-      {/* Drawn after every floor, so each flight cuts up through the beam into the floor above. */}
-      {levels.filter((l) => levels.includes(l + 1)).map((l) => <Stairs key={l} footY={layout.floorLine(l)} />)}
-      {living && isOwned(home, 'cat') && (
+      {/* Drawn after every floor, so each spiral rises through the beam into the floor above (or, on the top
+          floor, up to the ceiling). */}
+      {/* Not in the attic: it's the top floor, so a staircase there would go nowhere. */}
+      {levels.filter((l) => l < TOP_LEVEL).map((l) => (
+        <SpiralStairs
+          key={l}
+          cx={STAIRWELL.x + STAIRWELL.width / 2}
+          footY={layout.floorLine(l)}
+          topY={levels.includes(l + 1) ? layout.floorLine(l + 1) : layout.floorLine(l) - ROOM_HEIGHT}
+        />
+      ))}
+      {living && isPlaced(home, 'cat') && (
         <CatRoamer
           animate={animate}
-          span={[living.x + 20, living.x + living.width - 24]}
-          floorY={living.y + 184}
-          sofa={isOwned(home, 'sofa') ? { x: living.x + SOFA_SEAT.x + offsetOf(home, 'sofa'), y: living.y + SOFA_SEAT.y } : undefined}
+          start={{ level: 0, x: living.x + living.width / 2 }}
+          floorLine={layout.floorLine}
+          floorHeight={FLOOR_HEIGHT}
+          wanderTo={() => wanderAnywhere(layout)}
+          sofa={isPlaced(home, 'sofa') ? { x: living.x + SOFA_SEAT.x + offsetOf(home, 'sofa').dx, y: living.y + SOFA_SEAT.y + offsetOf(home, 'sofa').dy } : undefined}
         />
       )}
       <Walker
         target={target}
         animate={animate}
         start={START}
+        avatar={avatar}
         floorLine={layout.floorLine}
         floorHeight={FLOOR_HEIGHT}
-        wanderSpan={(spot) => wanderSpan(layout, spot)}
+        wanderTo={(spot) => {
+          // Mostly potter about the room they're in; now and then head somewhere else in the home, stairs and all.
+          const span = wanderSpan(layout, spot);
+          if (span && Math.random() < 0.6) return { level: spot.level, x: Math.round(span[0] + Math.random() * (span[1] - span[0])) };
+          return wanderAnywhere(layout);
+        }}
       />
       <Ground y={layout.groundY} />
     </Svg>
@@ -160,65 +196,51 @@ const chipFace = {
  * One floor's frame: ceiling strip, outer walls, the stairwell, the inner walls with their doorways (and a back
  * door out to the garden), and the beam underneath. The rooms are drawn on top of it.
  */
-function FloorFrame({ placed, look }: { placed: PlacedFloor; look: Look }) {
-  const ink = scene.ink;
+function FloorFrame({ placed, look, wall }: { placed: PlacedFloor; look: Look; wall?: string }) {
   const { y, right, innerWalls, backDoor } = placed;
   const top = y + CEILING;
   const floorY = top + ROOM_HEIGHT;
   return (
     <>
-      <Block x={HOUSE_LEFT} y={y} w={right - HOUSE_LEFT} h={CEILING} fill={scene.peach} shade={scene.brick} />
-      <Rect x={HOUSE_LEFT} y={top} width={WALL} height={ROOM_HEIGHT} fill={scene.peachDeep} stroke={ink} strokeWidth={1} />
-      {/* The stairwell: a plain wall and a floor of its own */}
-      <G transform={`translate(${STAIRWELL.x} ${top})`}>
-        <Rect x={0} y={0} width={STAIRWELL.width} height={WALL_HEIGHT} fill={look.wallAlt} />
-        <Floor w={STAIRWELL.width} style="honey" />
-      </G>
-      {innerWalls.map((x) => <Doorway key={x} x={x} top={top} floorY={floorY} />)}
+      <PixelBeam x={HOUSE_LEFT} y={y} w={right - HOUSE_LEFT} h={CEILING} />
+      {/* The greenhouse has a glass ceiling, not a timber one: sky through the panes, white glazing bars. */}
+      {placed.floor.id === GREENHOUSE.floor && (
+        <>
+          <Rect x={GREENHOUSE.x} y={y} width={GREENHOUSE.width} height={CEILING} fill={look.sky} />
+          <Rect x={GREENHOUSE.x} y={y} width={GREENHOUSE.width} height={CEILING} fill={scene.glass} opacity={0.55} />
+          {Array.from({ length: Math.floor(GREENHOUSE.width / 27) + 1 }, (_, i) => GREENHOUSE.x + i * 27).map((gx) => (
+            <Rect key={gx} x={gx} y={y} width={1.4} height={CEILING} fill={scene.white} />
+          ))}
+          <Rect x={GREENHOUSE.x} y={y} width={GREENHOUSE.width} height={1} fill={scene.timber.outline} />
+          <Rect x={GREENHOUSE.x} y={y + CEILING - 1} width={GREENHOUSE.width} height={1} fill={scene.white} />
+        </>
+      )}
+      <PixelPost x={HOUSE_LEFT} y={top} w={WALL} h={ROOM_HEIGHT} />
+      {/* The stairwell: a windowless slice of the living room drawing, so the two match. It runs on under the
+          doorway into the living room, so the opening shows the same wall and floor. */}
+      <LivingBackdrop sprite={stairwell} x={STAIRWELL.x} y={top} wall={wall} look={look} />
+      {/* No wall between the stairwell and the room beside it: the stairwell's drawing runs on to meet the room. */}
+      {innerWalls.slice(1).map((x) => <Doorway key={x} x={x} top={top} floorY={floorY} look={look} />)}
       {backDoor
-        ? <Doorway x={right - WALL} top={top} floorY={floorY} />
-        : <Rect x={right - WALL} y={top} width={WALL} height={ROOM_HEIGHT} fill={scene.peachDeep} stroke={ink} strokeWidth={1} />}
-      <Rect x={HOUSE_LEFT} y={floorY} width={right - HOUSE_LEFT} height={BEAM} fill={scene.peachDeep} stroke={ink} strokeWidth={1} />
-      {Array.from({ length: Math.floor((right - 40) / 60) + 1 }, (_, i) => 40 + i * 60).map((x) => (
-        <Line key={x} x1={x} y1={floorY} x2={x} y2={floorY + BEAM} stroke={scene.brick} strokeWidth={0.6} />
-      ))}
+        ? <Doorway x={right - WALL} top={top} floorY={floorY} look={look} />
+        : <PixelPost x={right - WALL} y={top} w={WALL} h={ROOM_HEIGHT} />}
+      <PixelBeam x={HOUSE_LEFT} y={floorY} w={right - HOUSE_LEFT} h={BEAM} joint={{ first: 40, every: 60 }} />
     </>
   );
 }
 
-/** An inner wall, seen end-on, with an open doorway at the bottom: the wall above, a lintel, and the door swung back. */
-function Doorway({ x, top, floorY }: { x: number; top: number; floorY: number }) {
-  const ink = scene.ink;
+/**
+ * An inner wall, seen end-on, with an open doorway at the bottom: the wall down to a lintel, and through the
+ * opening, the back wall and floor carrying on (otherwise the sky behind the house would show through the gap).
+ */
+function Doorway({ x, top, floorY, look }: { x: number; top: number; floorY: number; look: Look }) {
   const lintel = floorY - DOOR_HEIGHT;
   return (
     <>
-      <Rect x={x} y={top} width={WALL} height={lintel - top} fill={scene.peachDeep} stroke={ink} strokeWidth={1} />
-      <Rect x={x - 3} y={lintel - 4} width={WALL + 6} height={4} fill={scene.wood} stroke={ink} strokeWidth={1} />
-      {/* The open door, folded flat against the wall on the right */}
-      <Polygon points={`${x + WALL},${lintel} ${x + WALL + 6},${lintel + 4} ${x + WALL + 6},${floorY - 2} ${x + WALL},${floorY}`} fill={scene.wood} stroke={ink} strokeWidth={0.8} />
-      <Rect x={x + WALL + 3} y={lintel + DOOR_HEIGHT / 2} width={1.6} height={3} fill={scene.glow} />
-    </>
-  );
-}
-
-/** One flight of stairs, from the foot of a stairwell up into the floor above. */
-function Stairs({ footY }: { footY: number }) {
-  const steps = 12;
-  const run = (STAIR_HEAD_X - STAIR_FOOT_X + 12) / steps;
-  const rise = FLOOR_HEIGHT / steps;
-  const startX = STAIR_FOOT_X - 6;
-  const points: string[] = [`${startX},${footY}`];
-  for (let i = 0; i < steps; i++) {
-    const x = startX + i * run;
-    const yTop = footY - (i + 1) * rise;
-    points.push(`${x},${yTop}`, `${x + run},${yTop}`);
-  }
-  const endX = startX + steps * run;
-  points.push(`${endX},${footY}`);
-  return (
-    <>
-      <Polygon points={points.join(' ')} fill={scene.peachDeep} stroke={scene.ink} strokeWidth={1} strokeLinejoin="round" />
-      <Line x1={startX} y1={footY - 34} x2={endX} y2={footY - FLOOR_HEIGHT - 34} stroke={scene.woodDark} strokeWidth={1.4} />
+      {/* Through the opening: the same wall, baseboard and floorboards as the rooms either side */}
+      <PixelSprite sprite={doorway} x={x} y={top} />
+      <PixelPost x={x} y={top} w={WALL} h={lintel - top - 3} />
+      <PixelBeam x={x} y={lintel - 3} w={WALL} h={3} />
     </>
   );
 }
@@ -273,14 +295,7 @@ function LockedVeil({ id, width }: { id: string; width: number }) {
 }
 
 function Ground({ y }: { y: number }) {
-  return (
-    <>
-      <Rect x={0} y={y} width={SCENE_WIDTH} height={6} fill={scene.leaf} />
-      <Line x1={0} y1={y} x2={SCENE_WIDTH} y2={y} stroke={scene.ink} strokeWidth={1} />
-      <Rect x={0} y={y + 6} width={SCENE_WIDTH} height={200} fill={scene.peachDeep} />
-      {SPECKS.map(([x, dy], i) => <Rect key={i} x={x} y={y + 7 + (dy % 6)} width={2} height={1.5} fill={scene.brick} />)}
-    </>
-  );
+  return <PixelGround y={y} w={SCENE_WIDTH} depth={GROUND} />;
 }
 
 const CHIP_BOX = 200;

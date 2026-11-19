@@ -13,10 +13,10 @@ evidence: commit hash, screenshot path, or Storybook story
 What problem or question came up? (1-3 sentences)
 
 ## AI's proposal
-What did the AI suggest or generate, in its first pass? Link the `ai:` commit.
+What did the AI suggest or generate, in its first pass?
 
 ## My call
-What I decided, and what I changed (if anything). Link the `human:` commit.
+What I decided, and what I changed (if anything).
 
 ## Why
 My reasoning, in my own words. This is the part reviewers care about.

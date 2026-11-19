@@ -73,7 +73,12 @@ export default function Home() {
     router.push({ pathname: '/shop', params: id && catalogEntry(id).kind !== 'item' ? { tab: 'rooms' } : {} });
 
   return (
-    <FocusedScene style={{ flex: 1, backgroundColor: scene.time[timeOfDay].sky }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+    <FocusedScene style={{ flex: 1, backgroundColor: scene.time[timeOfDay].sky }} onLayout={(e) => {
+        // A hidden tab measures 0 wide (FocusedScene hides it with `display: none`). Keep the last real width, or
+        // the house unmounts while away and the tab flashes an empty sky for a frame when it is opened again.
+        const w = e.nativeEvent.layout.width;
+        if (w > 0) setWidth(w);
+      }}>
       <ScrollView
         ref={vertical}
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
@@ -98,17 +103,30 @@ export default function Home() {
           </ScrollView>
         )}
         {/* Room under the summary card, in the color of the ground, so nothing is hidden behind it. */}
-        <View style={{ height: cardHeight + space[3], backgroundColor: scene.peachDeep }} />
+        <View style={{ height: cardHeight + space[3], backgroundColor: scene.soil.body }} />
       </ScrollView>
 
       <View pointerEvents="box-none" style={{ position: 'absolute', top: insets.top + space[3], left: space[4], right: space[4], flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <View style={chip}><Text variant="subheading" accent accessibilityRole="header">{`${userName}’s Home`}</Text></View>
+        <View pointerEvents="box-none" style={{ flexDirection: 'row', gap: space[2], alignItems: 'center' }}>
+          <View style={chip}><Text variant="subheading" accent accessibilityRole="header">{`${userName}’s Home`}</Text></View>
+          <Pressable
+            onPress={() => router.push('/character')}
+            accessibilityRole="button"
+            accessibilityLabel="Change your look"
+            style={[chip, { minHeight: 44, justifyContent: 'center' }]}
+          >
+            <Text variant="subheading">Your look</Text>
+          </Pressable>
+        </View>
         <CoinChip coins={balance} />
       </View>
 
       <View
         pointerEvents="box-none"
-        onLayout={(e) => setCardHeight(e.nativeEvent.layout.height)}
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          if (h > 0) setCardHeight(h); // see the scene's onLayout
+        }}
         style={{ position: 'absolute', left: space[4], right: space[4], bottom: space[3], gap: space[3] }}
       >
         {!lookedAround && (

@@ -3,8 +3,9 @@ import { persist } from 'zustand/middleware';
 
 import { toLocalDate } from '@/domain/dates';
 import { doseKey } from '@/domain/day';
-import { decorateItem, decorateRoom, emptyHome, grantCoins, purchase, settleDose } from '@/domain/home';
-import type { CatalogId, FloorStyle, ItemId, Paint, RoomId } from '@/domain/home-catalog';
+import type { Avatar } from '@/domain/avatar';
+import { changeAvatar, decorateItem, decorateRoom, emptyHome, grantCoins, purchase, settleDose, type ItemChange } from '@/domain/home';
+import type { CatalogId, FloorStyle, ItemId, RoomId, WallPaint } from '@/domain/home-catalog';
 import { toggleSkipped, toggleTaken } from '@/domain/logs';
 import { parsePersistedState, type PersistedState } from '@/domain/persist';
 import { snoozeDose } from '@/domain/reminders';
@@ -25,9 +26,10 @@ export interface PillboxState extends PersistedState {
   /** Spends coins on a floor, room or piece of furniture. Does nothing if it isn't available. */
   buy: (id: CatalogId, now: Date) => void;
   /** Moves or repaints owned furniture. Free. null puts a choice back to the original. */
-  decorateItem: (id: ItemId, change: { dx?: number | null; color?: Paint | null }) => void;
+  decorateItem: (id: ItemId, change: ItemChange) => void;
   /** Repaints a room's walls or changes its floor. Free. */
-  decorateRoom: (id: RoomId, change: { wall?: Paint | null; floor?: FloorStyle | null }) => void;
+  decorateRoom: (id: RoomId, change: { wall?: WallPaint | null; floor?: FloorStyle | null }) => void;
+  changeAvatar: (change: Partial<Avatar>) => void;
   /** Development only: free coins, to try out the shop. */
   grantCoins: (amount: number) => void;
   addMedication: (medication: Medication) => void;
@@ -82,6 +84,7 @@ export function createPillboxStore(raw: RawStorage, now: () => number = Date.now
         buy: (id, at) => set((state) => ({ home: purchase(state.home, id, at) })),
         decorateItem: (id, change) => set((state) => ({ home: decorateItem(state.home, id, change) })),
         decorateRoom: (id, change) => set((state) => ({ home: decorateRoom(state.home, id, change) })),
+        changeAvatar: (change) => set((state) => ({ home: changeAvatar(state.home, change) })),
         grantCoins: (amount) => set((state) => ({ home: grantCoins(state.home, amount) })),
         reset: () => set(initial(now)),
       }),

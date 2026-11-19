@@ -6,12 +6,23 @@ export interface Spot {
   level: number;
 }
 
-/** The stairs rise from the bottom-left of each floor's stairwell to the top-right, into the floor above. */
-export const STAIR_FOOT_X = 24;
-export const STAIR_HEAD_X = 66;
+/**
+ * The stairs are a spiral round a pole in the middle of the stairwell, turning twice per floor. You step on at the
+ * left of the pole and step off at the left on the floor above. `STAIR_RADIUS` is where you stand on a tread.
+ */
+export const STAIR_CENTER_X = 44;
+export const STAIR_RADIUS = 14;
+export const STAIR_TURNS = 2;
 
-/** Where the stairs are at a given height: their x moves from foot to head as the level rises. */
-export const stairX = (level: number) => STAIR_FOOT_X + (level - Math.floor(level)) * (STAIR_HEAD_X - STAIR_FOOT_X);
+/** Which way round the spiral you are at a fraction `f` of the way up a floor, in radians: 0 is straight ahead. */
+export const stairAngle = (f: number) => -Math.PI / 2 + f * 2 * Math.PI * STAIR_TURNS;
+
+/** Where you are across the stairwell at a given height: going round the pole as the level rises. */
+export const stairX = (level: number) => STAIR_CENTER_X + STAIR_RADIUS * Math.sin(stairAngle(level - Math.floor(level)));
+
+/** Where you get on and off: the same spot, at the left of the pole, on each floor. */
+export const STAIR_FOOT_X = STAIR_CENTER_X - STAIR_RADIUS;
+export const STAIR_HEAD_X = STAIR_FOOT_X;
 
 /**
  * The corners of a walk from `from` to `to`, not including `from`. On the same floor it is a straight walk
@@ -41,7 +52,9 @@ export function planWalk(from: Spot, to: Spot): Spot[] {
   });
 }
 
-/** Distance along a walk, with a floor of stairs counted as its slope length. Used for pacing. */
+/** Distance along a walk, with a floor of stairs counted along the spiral (round and up). Used for pacing. */
 export function distance(a: Spot, b: Spot, floorHeight: number): number {
-  return Math.hypot(b.x - a.x, (b.level - a.level) * floorHeight);
+  const climb = Math.abs(b.level - a.level);
+  if (!climb) return Math.abs(b.x - a.x);
+  return Math.abs(b.x - a.x) + Math.hypot(climb * 2 * Math.PI * STAIR_RADIUS * STAIR_TURNS, climb * floorHeight);
 }
