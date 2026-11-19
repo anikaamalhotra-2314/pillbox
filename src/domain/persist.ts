@@ -1,4 +1,6 @@
 import { WEEKDAYS, type LocalDate, type LocalTime, type Weekday } from './dates';
+import { earnedFromLogs, type Decor, type HomeState, type Purchase } from './home';
+import { catalogEntry, isCatalogId, isFloorStyle, isPaint, type ItemId, type RoomId } from './home-catalog';
 import { MAX_GRACE_MINUTES } from './medication';
 import { isPillIcon } from './pill-icon';
 import type { DoseLog, Medication, Snooze } from './types';
@@ -12,10 +14,12 @@ export interface PersistedState {
   logs: DoseLog[];
   /** Added in storage version 2. */
   snoozes: Snooze[];
+  /** Added in storage version 3. */
+  home: HomeState;
 }
 
 export interface ParsedPersisted {
-  state: { userName?: string; medications: Medication[]; logs: DoseLog[]; snoozes: Snooze[] };
+  state: { userName?: string; medications: Medication[]; logs: DoseLog[]; snoozes: Snooze[]; home: HomeState };
   /** How many entries were invalid and left out. The caller should back up the raw data when this is above 0. */
   dropped: number;
 }
@@ -72,6 +76,62 @@ function parseSnooze(v: unknown): Snooze | null {
   return { medicationId, date, time, until };
 }
 
+const DOSE_KEY = /^.+\|\d{4}-\d{2}-\d{2}\|([01]\d|2[0-3]):[0-5]\d$/;
+
+function parsePurchase(v: unknown): Purchase | null {
+  if (!isRecord(v)) return null;
+  const { id, price, at } = v;
+  // Something bought in a newer app version is unknown here. It is dropped (which refunds it) and counted,
+  // so the raw data is backed up and nothing is lost for good.
+  if (!isCatalogId(id)) return null;
+  if (!Number.isInteger(price) || (price as number) < 0) return null;
+  if (typeof at !== 'string' || Number.isNaN(new Date(at).getTime())) return null;
+  return { id, price: price as number, at };
+}
+
+const MAX_DX = 600;
+
+/** Cosmetic, like pill icons: anything unrecognised is ignored rather than counted as lost data. Missing before version 4. */
+function parseDecor(raw: unknown): Decor {
+  const decor: Decor = { items: {}, rooms: {} };
+  if (!isRecord(raw)) return decor;
+  for (const [id, v] of Object.entries(isRecord(raw.items) ? raw.items : {})) {
+    if (!isCatalogId(id) || catalogEntry(id).kind !== 'item' || !isRecord(v)) continue;
+    const dx = typeof v.dx === 'number' && Number.isFinite(v.dx) && v.dx !== 0 && Math.abs(v.dx) <= MAX_DX ? Math.round(v.dx) : undefined;
+    const color = isPaint(v.color) ? v.color : undefined;
+    if (dx || color) decor.items[id as ItemId] = { ...(dx ? { dx } : {}), ...(color ? { color } : {}) };
+  }
+  for (const [id, v] of Object.entries(isRecord(raw.rooms) ? raw.rooms : {})) {
+    if (!isCatalogId(id) || catalogEntry(id).kind !== 'room' || !isRecord(v)) continue;
+    const wall = isPaint(v.wall) ? v.wall : undefined;
+    const floor = isFloorStyle(v.floor) ? v.floor : undefined;
+    if (wall || floor) decor.rooms[id as RoomId] = { ...(wall ? { wall } : {}), ...(floor ? { floor } : {}) };
+  }
+  return decor;
+}
+
+/** Missing before version 3: coins are then backfilled from the on-time doses already logged. */
+function parseHome(raw: unknown, medications: Medication[], logs: DoseLog[]): { home: HomeState; dropped: number } {
+  const decor = { items: {}, rooms: {} };
+  if (raw === undefined) return { home: { earned: earnedFromLogs(logs, medications), purchases: [], decor }, dropped: 0 };
+  if (!isRecord(raw)) return { home: { earned: {}, purchases: [], decor }, dropped: 1 };
+  let dropped = 0;
+  const earned: Record<string, number> = {};
+  for (const [key, coins] of Object.entries(isRecord(raw.earned) ? raw.earned : {})) {
+    if (DOSE_KEY.test(key) && Number.isInteger(coins) && (coins as number) > 0) earned[key] = coins as number;
+    else dropped++;
+  }
+  if (raw.earned !== undefined && !isRecord(raw.earned)) dropped++;
+  const purchases: Purchase[] = [];
+  for (const item of Array.isArray(raw.purchases) ? raw.purchases : []) {
+    const p = parsePurchase(item);
+    if (!p || purchases.some((q) => q.id === p.id)) { dropped++; continue; }
+    purchases.push(p);
+  }
+  if (raw.purchases !== undefined && !Array.isArray(raw.purchases)) dropped++;
+  return { home: { earned, purchases, decor: parseDecor(raw.decor) }, dropped };
+}
+
 /** Returns null only when the value is not a usable state object at all. */
 export function parsePersistedState(raw: unknown): ParsedPersisted | null {
   if (!isRecord(raw) || !Array.isArray(raw.medications) || !Array.isArray(raw.logs)) return null;
@@ -106,7 +166,10 @@ export function parsePersistedState(raw: unknown): ParsedPersisted | null {
     else dropped++;
   }
 
+  const home = parseHome(raw.home, medications, logs);
+  dropped += home.dropped;
+
   const hasName = isText(raw.userName);
   if (raw.userName !== undefined && !hasName) dropped++;
-  return { state: { ...(hasName ? { userName: raw.userName as string } : {}), medications, logs, snoozes }, dropped };
+  return { state: { ...(hasName ? { userName: raw.userName as string } : {}), medications, logs, snoozes, home: home.home }, dropped };
 }

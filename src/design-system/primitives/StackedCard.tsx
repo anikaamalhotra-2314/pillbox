@@ -4,7 +4,7 @@ import { View, type AccessibilityState, type StyleProp, type ViewStyle } from 'r
 import { borderWidth, color, radius, stackedShadow } from '@/design-system/tokens';
 import { Pressable } from '@/design-system/primitives/Pressable';
 
-export type StackedCardTone = 'peach' | 'periwinkle' | 'yellow';
+export type StackedCardTone = 'peach' | 'periwinkle' | 'yellow' | 'cream';
 
 // Pressed fill is always the shadow color (see color.surface.cardPressed), so each tone
 // only needs a fill and a shadow. The yellow shadow reuses the action-pressed olive.
@@ -12,6 +12,8 @@ const tones = {
   peach: { fill: color.surface.card, shadow: color.surface.cardShadow },
   periwinkle: { fill: color.surface.cabinetCard, shadow: color.surface.cabinetCardShadow },
   yellow: { fill: color.surface.action, shadow: color.surface.actionPressed },
+  // The home's summary card: a page-colored face over the periwinkle shadow, from the mockup.
+  cream: { fill: color.surface.page, shadow: color.surface.cabinetCardShadow },
 } as const;
 
 type Props = {

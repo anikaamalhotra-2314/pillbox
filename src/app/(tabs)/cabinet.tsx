@@ -5,13 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FocusedScene } from '@/design-system/primitives/FocusedScene';
 import { PillIcon } from '@/design-system/icons/PillIcon';
-import { Pressable } from '@/design-system/primitives/Pressable';
 import { StackedCard } from '@/design-system/primitives/StackedCard';
 import { Text } from '@/design-system/primitives/Text';
 import { borderWidth, color, space } from '@/design-system/tokens';
 import { cabinetTitle, medicationSubtitle } from '@/domain/format';
 import { sortMedications } from '@/domain/medication';
 import { pillIconOf } from '@/domain/pill-icon';
+import { AddMedicationButton } from '@/features/medication-form/AddMedicationButton';
 import { usePillbox } from '@/store/pillbox';
 
 export default function Cabinet() {
@@ -31,7 +31,7 @@ export default function Cabinet() {
         data={sorted}
         keyExtractor={(m) => m.id}
         contentContainerStyle={{ padding: space[5], gap: space[5], flexGrow: 1 }}
-        ListEmptyComponent={<Text variant="subheading" tone="placeholder">Your cabinet is empty. Add a medication with the + button.</Text>}
+        ListEmptyComponent={<Text variant="subheading" tone="placeholder">Your cabinet is empty. Add your first medication below.</Text>}
         renderItem={({ item: m }) => (
           <StackedCard
             tone="periwinkle"
@@ -52,15 +52,8 @@ export default function Cabinet() {
         )}
       />
 
-      <View style={[rule, { flexDirection: 'row', justifyContent: 'flex-end', borderTopWidth: borderWidth.default }]}>
-        <Pressable
-          onPress={() => router.push('/add')}
-          accessibilityRole="button"
-          accessibilityLabel="Add medication"
-          style={[rule, { width: 56, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderLeftWidth: borderWidth.default }]}
-        >
-          <Text variant="heading">+</Text>
-        </Pressable>
+      <View style={[rule, { borderTopWidth: borderWidth.default, paddingHorizontal: space[5], paddingTop: space[4], paddingBottom: space[3] }]}>
+        <AddMedicationButton />
       </View>
     </FocusedScene>
   );

@@ -20,6 +20,8 @@ type Props = {
   alertsEnabled: boolean;
   /** ISO timestamp of when the dose was logged. Shown as "Taken 6:42am". */
   loggedAt?: string;
+  /** Coins this dose earned for being taken on time. Shown beside the status as "+5 coins". */
+  coins?: number;
   /** ISO timestamp the reminder was snoozed to. Shown beside the status as "snoozed 10:55am". */
   snoozedUntil?: string;
   /** Without it, the card is plain information (for example on the details screen itself). */
@@ -31,13 +33,12 @@ type Props = {
 };
 
 const DIMMED: DoseStatus[] = ['taken', 'skipped', 'locked'];
-const EMPHASIZED: DoseStatus[] = ['due', 'overdue', 'missed'];
 
 /**
  * One scheduled dose on the home screen: time label above, stacked card below.
  * Three separate touch targets (open, check, menu) so none is nested inside another button.
  */
-export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt, snoozedUntil, onOpen, onToggleTaken, onOpenMenu, testID }: Props) {
+export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt, coins, snoozedUntil, onOpen, onToggleTaken, onOpenMenu, testID }: Props) {
   const [down, setDown] = useState(false);
   const dimmed = DIMMED.includes(status);
   const tone = dimmed ? 'taken' : 'primary';
@@ -46,7 +47,8 @@ export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt
   const taken = status === 'taken';
   const spoken = spokenTime(time);
   const snoozePhrase = snoozedTo ? `, reminder snoozed until ${spokenTime(snoozedTo)}` : '';
-  const label = `${name}, ${subtitle}, ${spoken}, ${statusPhrase(status, loggedAt)}${snoozePhrase}`;
+  const coinPhrase = coins ? `, earned ${coins} coins` : '';
+  const label = `${name}, ${subtitle}, ${spoken}, ${statusPhrase(status, loggedAt)}${coinPhrase}${snoozePhrase}`;
   const text = (
     <>
       <Text variant="title" tone={tone} style={taken ? { textDecorationLine: 'line-through' } : undefined}>{name}</Text>
@@ -63,8 +65,9 @@ export function DoseCard({ name, subtitle, time, status, alertsEnabled, loggedAt
         style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space[2] }}
       >
         {alertsEnabled && <BellIcon />}
-        <Text variant="title" accent bold={EMPHASIZED.includes(status)} tone={tone}>{formatTime(time)}</Text>
+        <Text variant="title" tone={tone}>{formatTime(time)}</Text>
         {tag && <Text variant="label" accent tone={tone}>{tag}</Text>}
+        {coins ? <Text variant="label" accent tone={tone}>{`+${coins} coins`}</Text> : null}
         {/* Its own piece, so on a narrow screen it moves to the next line whole instead of breaking mid-phrase. */}
         {snoozedTo && <Text variant="label" accent tone={tone}>{`snoozed ${formatTime(snoozedTo)}`}</Text>}
       </View>

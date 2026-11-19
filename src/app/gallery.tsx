@@ -21,7 +21,6 @@ export default function Gallery() {
           <Text key={v} variant={v}>{`${v} ${fontSize[v]}: Good Morning, Anika.`}</Text>
         ))}
         <Text variant="title" accent>accent: 10:30am</Text>
-        <Text variant="title" bold>bold: Save Changes!</Text>
         <Text variant="subheading" tone="taken">taken: 1 pill | 125mg</Text>
         <Text variant="subheading" tone="placeholder">placeholder: e.g. Amoxicillin</Text>
       </Section>

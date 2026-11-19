@@ -1,20 +1,25 @@
-import { View } from 'react-native';
+import { color } from '@/design-system/tokens';
+import { PixelArt } from './PixelArt';
 
-import { borderWidth, color } from '@/design-system/tokens';
+// Drawn to match the Figma's pixel bell: an ink outline around a yellow bell, with a knob and clapper.
+const BELL = [
+  '.....##.....',
+  '....#oo#....',
+  '...#oooo#...',
+  '..#oooooo#..',
+  '..#oooooo#..',
+  '..#oooooo#..',
+  '..#oooooo#..',
+  '.#oooooooo#.',
+  '#oooooooooo#',
+  '############',
+  '....#oo#....',
+  '.....##.....',
+];
 
-// PLACEHOLDER. The Figma has a pixel-art bell; swap this for the exported artwork.
+const PAINT = { '#': color.border.strong, o: color.surface.action };
+
+/** Marks a time that has a reminder. Use a multiple of 12 for crisp edges. */
 export function BellIcon({ size = 12 }: { size?: number }) {
-  return (
-    <View
-      aria-hidden
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: color.surface.action,
-        borderWidth: borderWidth.default,
-        borderColor: color.border.strong,
-      }}
-    />
-  );
+  return <PixelArt rows={BELL} paint={PAINT} size={size} />;
 }

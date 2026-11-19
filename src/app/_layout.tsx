@@ -1,4 +1,4 @@
-import { B612Mono_400Regular, B612Mono_400Regular_Italic, B612Mono_700Bold, B612Mono_700Bold_Italic } from '@expo-google-fonts/b612-mono';
+import { B612Mono_400Regular, B612Mono_400Regular_Italic } from '@expo-google-fonts/b612-mono';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,8 +15,6 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     [fontFamily.regular]: B612Mono_400Regular,
     [fontFamily.italic]: B612Mono_400Regular_Italic,
-    [fontFamily.bold]: B612Mono_700Bold,
-    [fontFamily.boldItalic]: B612Mono_700Bold_Italic,
   });
 
   const hydrated = useHydrated();

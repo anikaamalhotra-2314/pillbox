@@ -2,6 +2,7 @@ import { createPillboxStore, STORAGE_KEY } from '../create-store';
 import { createSeedMedications } from '../seed';
 import { toLocalDate } from '@/domain/dates';
 import type { RawStorage } from '../storage';
+import { coinBalance, emptyHome } from '@/domain/home';
 import type { Dose, Medication } from '@/domain/types';
 
 function memoryStorage(initial: Record<string, string> = {}) {
@@ -68,8 +69,8 @@ describe('persistence', () => {
     store.getState().addMedication(med);
     await flush();
     const stored = JSON.parse(data.get(STORAGE_KEY)!);
-    expect(Object.keys(stored.state).sort()).toEqual(['logs', 'medications', 'snoozes', 'userName']);
-    expect(stored.version).toBe(2);
+    expect(Object.keys(stored.state).sort()).toEqual(['home', 'logs', 'medications', 'snoozes', 'userName']);
+    expect(stored.version).toBe(4);
   });
 
   it('survives corrupt JSON: starts from the sample data and keeps a copy of the bad text', async () => {
@@ -226,5 +227,95 @@ describe('snoozing', () => {
     const store = createPillboxStore(raw);
     await store.persist.rehydrate();
     expect(store.getState()).toMatchObject({ userName: 'Sam', medications: [med], logs: [log], snoozes: [] });
+  });
+});
+
+describe('coins and the home', () => {
+  // Synthroid at 6:30 on the sample data has a 30 minute grace window.
+  const onTime = new Date(2025, 2, 15, 6, 40);
+  const late = new Date(2025, 2, 15, 9, 0);
+  const mk = async () => {
+    const { raw } = memoryStorage();
+    const store = createPillboxStore(raw);
+    await store.persist.rehydrate();
+    return { store, raw };
+  };
+
+  it('pays 5 coins for a dose taken on time, and saves them', async () => {
+    const { store, raw } = await mk();
+    store.getState().toggleTaken(dose, onTime);
+    await flush();
+    const again = createPillboxStore(raw);
+    await again.persist.rehydrate();
+    expect(coinBalance(again.getState().home)).toBe(5);
+  });
+
+  it('pays nothing for a late dose', async () => {
+    const { store } = await mk();
+    store.getState().toggleTaken(dose, late);
+    expect(coinBalance(store.getState().home)).toBe(0);
+  });
+
+  it('takes the coins back when the dose is unchecked or skipped', async () => {
+    const { store } = await mk();
+    store.getState().toggleTaken(dose, onTime);
+    store.getState().toggleTaken(dose, onTime);
+    expect(coinBalance(store.getState().home)).toBe(0);
+    store.getState().toggleTaken(dose, onTime);
+    store.getState().toggleSkipped(dose, onTime);
+    expect(coinBalance(store.getState().home)).toBe(0);
+  });
+
+  it('keeps the coins when the medication is deleted', async () => {
+    const { store } = await mk();
+    store.getState().toggleTaken(dose, onTime);
+    store.getState().deleteMedication('synthroid');
+    expect(coinBalance(store.getState().home)).toBe(5);
+  });
+
+  it('buys with the coins, saves the purchase, and refuses what it cannot afford', async () => {
+    const { store, raw } = await mk();
+    const days = ['2025-03-11', '2025-03-12', '2025-03-13', '2025-03-14'];
+    for (const date of days) store.getState().toggleTaken({ ...dose, date }, new Date(`${date}T06:35:00`));
+    expect(coinBalance(store.getState().home)).toBe(20);
+    store.getState().buy('sofa', onTime);
+    expect(store.getState().home.purchases).toEqual([]);
+    store.getState().buy('rug', onTime);
+    await flush();
+    const again = createPillboxStore(raw);
+    await again.persist.rehydrate();
+    expect(again.getState().home.purchases.map((p) => p.id)).toEqual(['rug']);
+    expect(coinBalance(again.getState().home)).toBe(0);
+  });
+
+  it('migrates data saved by version 2, paying for the on-time doses already logged', async () => {
+    const log = { ...dose, outcome: 'taken', loggedAt: onTime.toISOString() };
+    const synthroid = seedMedications[0];
+    const v2 = JSON.stringify({ state: { userName: 'Sam', medications: [synthroid], logs: [log], snoozes: [] }, version: 2 });
+    const { raw } = memoryStorage({ [STORAGE_KEY]: v2 });
+    const store = createPillboxStore(raw);
+    await store.persist.rehydrate();
+    expect(store.getState()).toMatchObject({ userName: 'Sam', medications: [synthroid], logs: [log] });
+    expect(coinBalance(store.getState().home)).toBe(5);
+  });
+
+  it('saves decorating, for free', async () => {
+    const { store, raw } = await mk();
+    store.getState().grantCoins(200);
+    store.getState().buy('sofa', onTime);
+    store.getState().decorateItem('sofa', { dx: -30, color: 'mint' });
+    store.getState().decorateRoom('living', { wall: 'lilac', floor: 'walnut' });
+    await flush();
+    const again = createPillboxStore(raw);
+    await again.persist.rehydrate();
+    expect(again.getState().home.decor).toEqual({ items: { sofa: { dx: -30, color: 'mint' } }, rooms: { living: { wall: 'lilac', floor: 'walnut' } } });
+    expect(coinBalance(again.getState().home)).toBe(80);
+  });
+
+  it('reset empties the home', async () => {
+    const { store } = await mk();
+    store.getState().toggleTaken(dose, onTime);
+    store.getState().reset();
+    expect(store.getState().home).toEqual(emptyHome());
   });
 });

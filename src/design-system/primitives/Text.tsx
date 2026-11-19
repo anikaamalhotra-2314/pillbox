@@ -7,22 +7,17 @@ type TextTone = keyof typeof color.text;
 
 type Props = TextProps & {
   variant?: TextVariant;
-  /** Italic accent: greeting name, time labels, month, form labels. */
+  /** Italic accent: greeting name, status tags, month, form labels. */
   accent?: boolean;
-  bold?: boolean;
   tone?: TextTone;
 };
 
-function familyFor(accent: boolean, bold: boolean) {
-  if (bold) return accent ? fontFamily.boldItalic : fontFamily.bold;
-  return accent ? fontFamily.italic : fontFamily.regular;
-}
 
-export function Text({ variant = 'title', accent = false, bold = false, tone = 'primary', style, ...rest }: Props) {
+export function Text({ variant = 'title', accent = false, tone = 'primary', style, ...rest }: Props) {
   return (
     <RNText
       {...rest}
-      style={[{ fontFamily: familyFor(accent, bold), fontSize: fontSize[variant], color: color.text[tone] }, style]}
+      style={[{ fontFamily: accent ? fontFamily.italic : fontFamily.regular, fontSize: fontSize[variant], color: color.text[tone] }, style]}
     />
   );
 }

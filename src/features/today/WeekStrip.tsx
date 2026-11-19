@@ -13,11 +13,12 @@ const CENTER = 3; // index of today within the 7 visible days when the strip fir
 
 type Props = { today: LocalDate; selected: LocalDate; onSelect: (date: LocalDate) => void };
 
-/** Seven days visible, scrollable in both directions, centered on today at first (decision 0006). */
+/** Seven days visible, scrollable in both directions, centered on today, including after midnight (decision 0006). */
 export function WeekStrip({ today, selected, onSelect }: Props) {
   const [width, setWidth] = useState(0);
-  // Anchored at mount so the list doesn't shift under the user when the date rolls over.
-  const [anchor] = useState(today);
+  // Re-anchored when the date rolls over, so today is always the centre (decision 0006).
+  const [anchor, setAnchor] = useState(today);
+  if (anchor !== today) setAnchor(today);
   const days = useMemo(
     () => Array.from({ length: DAYS_EACH_SIDE * 2 + 1 }, (_, i) => addDays(anchor, i - DAYS_EACH_SIDE)),
     [anchor],
@@ -67,6 +68,8 @@ export function WeekStrip({ today, selected, onSelect }: Props) {
     >
       {width > 0 && (
         <FlatList
+          // A new anchor remounts the list, since `initialScrollIndex` only applies on mount.
+          key={anchor}
           ref={listRef}
           horizontal
           data={days}
@@ -91,7 +94,7 @@ export function WeekStrip({ today, selected, onSelect }: Props) {
 }
 
 const MARKER = 32;
-const MARKER_OFFSET = 3;
+const TODAY_DOT = 4;
 
 function DayCell({ date, width, isToday, isSelected, onPress, cellRef }: {
   date: LocalDate; width: number; isToday: boolean; isSelected: boolean; onPress: () => void; cellRef: (el: View | null) => void;
@@ -104,31 +107,23 @@ function DayCell({ date, width, isToday, isSelected, onPress, cellRef }: {
       accessibilityRole="button"
       accessibilityLabel={spokenDate(date, isToday)}
       aria-selected={isSelected}
-      style={{ width, alignItems: 'center', paddingVertical: space[3], gap: space[2] }}
+      style={{ width, alignItems: 'center', paddingTop: space[3], paddingBottom: space[2], gap: space[1] }}
     >
-      <Text variant="title" bold={isSelected}>{weekdayShort(date)}</Text>
-      <View style={{ width: MARKER + MARKER_OFFSET, height: MARKER + MARKER_OFFSET }}>
-        {isSelected && (
-          <View
-            style={{
-              position: 'absolute', left: MARKER_OFFSET, top: MARKER_OFFSET, width: MARKER, height: MARKER,
-              borderRadius: MARKER / 2, backgroundColor: color.surface.cabinetCardShadow,
-              borderWidth: borderWidth.default, borderColor: color.border.strong,
-            }}
-          />
-        )}
-        <View
-          style={{
-            width: MARKER, height: MARKER, borderRadius: MARKER / 2, alignItems: 'center', justifyContent: 'center',
-            backgroundColor: isSelected ? color.surface.selected : 'transparent',
-            // Selection is a heavier ring plus a bold label, not fill alone (decision 0009). Today is a thin ring.
-            borderWidth: isSelected ? 2 : isToday ? borderWidth.default : 0,
-            borderColor: color.border.strong,
-          }}
-        >
-          <Text variant="numeral" bold={isSelected}>{dayOfMonth(date)}</Text>
-        </View>
+      <Text variant="title">{weekdayShort(date)}</Text>
+      <View
+        style={{
+          width: MARKER, height: MARKER, borderRadius: MARKER / 2, alignItems: 'center', justifyContent: 'center', marginTop: space[1],
+          backgroundColor: isSelected ? color.surface.selected : 'transparent',
+          // Selection is a ring plus fill, so it never depends on the faint fill alone (decision 0009). The ring
+          // is the app's standard 1pt border; today is marked by a dot instead, so the two never look alike.
+          borderWidth: isSelected ? borderWidth.default : 0,
+          borderColor: color.border.strong,
+        }}
+      >
+        <Text variant="numeral">{dayOfMonth(date)}</Text>
       </View>
+      {/* Every cell reserves the dot's space, so the strip does not shift as the selection moves. */}
+      <View style={{ width: TODAY_DOT, height: TODAY_DOT, borderRadius: TODAY_DOT / 2, backgroundColor: isToday ? color.border.strong : 'transparent' }} />
     </Pressable>
   );
 }

@@ -84,7 +84,7 @@ export function TimeModal({ visible, initial, onCancel, onConfirm, validate }: P
                       aria-checked={on}
                       style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? color.surface.selected : 'transparent', borderWidth: on ? 2 : borderWidth.default, borderColor: color.border.strong }}
                     >
-                      <Text variant="title" bold={on}>{half}</Text>
+                      <Text variant="title">{half}</Text>
                     </Pressable>
                   );
                 })}

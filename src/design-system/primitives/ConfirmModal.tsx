@@ -35,7 +35,7 @@ export function ConfirmModal({ visible, title, message, confirmLabel, cancelLabe
             </Pressable>
             {/* Inverted so the destructive choice reads differently without relying on color. */}
             <Pressable onPress={onConfirm} accessibilityRole="button" style={[box, { backgroundColor: color.border.strong }]}>
-              <Text variant="title" bold style={{ color: color.surface.page }}>{confirmLabel}</Text>
+              <Text variant="title" style={{ color: color.surface.page }}>{confirmLabel}</Text>
             </Pressable>
           </View>
         </View>

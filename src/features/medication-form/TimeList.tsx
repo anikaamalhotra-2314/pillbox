@@ -44,7 +44,7 @@ export function TimeList({ times, onChange, error }: Props) {
             style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: space[2], minHeight: 48, paddingHorizontal: space[3] }}
           >
             <BellIcon />
-            <Text variant="title" accent>{formatTime(time)}</Text>
+            <Text variant="title">{formatTime(time)}</Text>
           </Pressable>
           <Pressable
             onPress={() => onChange(times.filter((t) => t !== time))}

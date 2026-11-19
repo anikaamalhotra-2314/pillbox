@@ -9,14 +9,16 @@ import { toLocalDate } from '@/domain/dates';
 import { buildDay, doseKey, type DayEntry } from '@/domain/day';
 import { formatTime, greetingFor, medicationSubtitle, monthYearLabel } from '@/domain/format';
 import { canSnooze, snoozedUntil, SNOOZE_MINUTES } from '@/domain/reminders';
+import { coinBalance } from '@/domain/home';
 import { doseActions, type DoseAction } from '@/domain/status';
+import { CoinChip } from '@/features/home/CoinChip';
 import { remindersAvailable } from '@/features/reminders/notifier';
+import { AddMedicationButton } from '@/features/medication-form/AddMedicationButton';
 import { DoseCard } from '@/features/today/DoseCard';
 import { WeekStrip } from '@/features/today/WeekStrip';
 import { useNow } from '@/hooks/use-now';
 import { usePillbox } from '@/store/pillbox';
 import { FocusedScene } from '@/design-system/primitives/FocusedScene';
-import { Pressable } from '@/design-system/primitives/Pressable';
 import { ActionMenu } from '@/design-system/primitives/ActionMenu';
 
 const ACTION_LABELS: Record<DoseAction, string> = {
@@ -33,6 +35,13 @@ export default function Today() {
   const now = useNow();
   const today = toLocalDate(now);
   const [selected, setSelected] = useState(today);
+  // When the date rolls over (app left open overnight, or reopened on a new day), go back to today.
+  // Done during render, React's pattern for adjusting state to a changed value, not in an effect.
+  const [shownToday, setShownToday] = useState(today);
+  if (shownToday !== today) {
+    setShownToday(today);
+    setSelected(today);
+  }
 
   const userName = usePillbox((s) => s.userName);
   const medications = usePillbox((s) => s.medications);
@@ -41,32 +50,24 @@ export default function Today() {
   const toggleSkipped = usePillbox((s) => s.toggleSkipped);
   const snooze = usePillbox((s) => s.snooze);
   const snoozes = usePillbox((s) => s.snoozes);
+  const home = usePillbox((s) => s.home);
   const [menuFor, setMenuFor] = useState<DayEntry | null>(null);
 
   const entries = useMemo(() => buildDay(medications, logs, selected, now), [medications, logs, selected, now]);
 
   return (
     <FocusedScene style={{ flex: 1, paddingTop: insets.top }}>
-      <View style={[rule, { padding: space[5] }]}>
-        <Text variant="heading">
+      <View style={[rule, { padding: space[5], flexDirection: 'row', alignItems: 'center', gap: space[3] }]}>
+        <Text variant="heading" style={{ flex: 1 }}>
           {`Good ${greetingFor(now)}, `}
           <Text variant="heading" accent>{userName}</Text>
           {'.'}
         </Text>
+        <CoinChip coins={coinBalance(home)} onPress={() => router.navigate('/home')} accessibilityHint="Opens your home" />
       </View>
 
-      <View style={[rule, { flexDirection: 'row', alignItems: 'stretch' }]}>
-        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: space[5], paddingVertical: space[2] }}>
-          <Text variant="label" accent>{monthYearLabel(selected)}</Text>
-        </View>
-        <Pressable
-          onPress={() => router.push('/add')}
-          accessibilityRole="button"
-          accessibilityLabel="Add medication"
-          style={{ width: 48, alignItems: 'center', justifyContent: 'center', borderLeftWidth: borderWidth.default, borderLeftColor: color.border.strong }}
-        >
-          <Text variant="heading">+</Text>
-        </Pressable>
+      <View style={[rule, { paddingHorizontal: space[5], paddingVertical: space[3] }]}>
+        <Text variant="label" accent>{monthYearLabel(selected)}</Text>
       </View>
 
       <View style={rule}>
@@ -77,7 +78,14 @@ export default function Today() {
         data={entries}
         keyExtractor={(e) => doseKey(e.dose)}
         contentContainerStyle={{ padding: space[5], gap: space[5], flexGrow: 1 }}
-        ListEmptyComponent={<Text variant="subheading" tone="placeholder">No doses scheduled for this day.</Text>}
+        ListEmptyComponent={medications.length === 0 ? (
+          <View style={{ gap: space[4] }}>
+            <Text variant="subheading" tone="placeholder">No medications yet. Add one to see its doses here.</Text>
+            <AddMedicationButton style={{ alignSelf: 'flex-start' }} />
+          </View>
+        ) : (
+          <Text variant="subheading" tone="placeholder">No doses scheduled for this day.</Text>
+        )}
         renderItem={({ item: e }) => (
           <DoseCard
             name={e.medication.name}
@@ -86,6 +94,7 @@ export default function Today() {
             status={e.status}
             alertsEnabled={e.medication.alertsEnabled}
             loggedAt={e.log?.loggedAt}
+            coins={home.earned[doseKey(e.dose)]}
             snoozedUntil={snoozedUntil(snoozes, e.dose, now)}
             onOpen={() => router.push({ pathname: '/medication/[id]', params: { id: e.medication.id } })}
             onToggleTaken={() => toggleTaken(e.dose, now)}

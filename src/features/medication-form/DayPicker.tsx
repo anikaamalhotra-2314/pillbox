@@ -30,12 +30,12 @@ export function DayPicker({ value, onChange, error }: Props) {
               style={{
                 width: SIZE, height: SIZE, borderRadius: SIZE / 2, alignItems: 'center', justifyContent: 'center',
                 backgroundColor: on ? color.surface.selected : 'transparent',
-                // A heavier ring plus a bold label, so selection never depends on fill alone (decision 0009).
+                // A heavier ring, so selection never depends on fill alone (decision 0009).
                 borderWidth: on ? 2 : borderWidth.default,
                 borderColor: color.border.strong,
               }}
             >
-              <Text variant="subheading" bold={on}>{weekdayName(day).slice(0, 2)}</Text>
+              <Text variant="subheading">{weekdayName(day).slice(0, 2)}</Text>
             </Pressable>
           );
         })}

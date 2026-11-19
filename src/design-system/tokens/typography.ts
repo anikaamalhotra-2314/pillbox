@@ -3,12 +3,11 @@
 
 export const fontFamily = {
   // B612 Mono, per the Figma. Names follow @expo-google-fonts/b612-mono; verify them on install.
-  // The design uses italic as an accent (greeting name, time labels, month, form labels). Custom
+  // The design uses italic as an accent (greeting name, status tags, month, form labels). Custom
   // fonts need the italic file as its own family, so there is no separate fontStyle token.
+  // No bold: the owner found 700 too heavy, and the family has nothing between 400 and 700.
   regular: 'B612Mono_400Regular',
   italic: 'B612Mono_400Regular_Italic',
-  bold: 'B612Mono_700Bold',
-  boldItalic: 'B612Mono_700Bold_Italic',
   // Any system monospace is acceptable while the font loads or if it fails to.
   fallback: 'Menlo',
 } as const;
